@@ -272,30 +272,38 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool){
 	$title = stripslashes($title);
     $begin = preg_quote($begin,"/");
     $end = preg_quote($end,"/");
+    getIngr($buf);
+    getStep($buf);
 	//var_dump($begin);
     preg_match("/$title/is",$buf,$title_preg);
 	//var_dump($title_preg);
     if(preg_match_all("/$begin.*?$end/is",$buf,$matches) != NULL){
+        // Получение текста
 		$str= $matches[0][0];
-
+        // Обработка шаблонами обработки
 		$str = useProccess($arr,$str,'page');
 		$str = useOptionalProcess($str);
+        // Работа с изображениями
 		$image_arr = getImageFromContent($str);
         $path =  $bool ? "prok-test-uploads" : "prok-uploads";
         $res = saveImages($image_arr, $path,$title_preg[1]);
-		var_dump($title_preg);
 		$str = replaceImages($image_arr,$res[1],$str);
+
+        // Формируем вывод
 		echo "<br><b>Заголовок: </b>";
 		echo $title_preg[1];
 		echo "<br><b>Текст:</b><br>";
 		echo "$str";
-		error_log("-----------------------------images=>".var_dump($res));
+
 		// Вставляем запись в базу данных
 		if(!$bool){
+            // Сохраняем и вставляем в бд запись
 			$post_id = savePost($title_preg[1],$str,array( 1 ));
 			$images_urls = $res[0];
+            // Сохраняем изображения в бд и медиатеке
 			for($i = 0;$i < count($images_urls);$i++){
 				if($i == 0){
+                    // Первое изображение пойдет на изоюражение-миниатюру
 					saveImagesAndAddToPost( $post_id, $images_urls[$i],null,true);
 				}else{
 					saveImagesAndAddToPost( $post_id, $images_urls[$i]);
@@ -306,6 +314,22 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool){
 		echo "NOT MATCH";
 	}
 	error_log("---------------------------------------------------------------END--simple");
+}
+
+function getIngr($str){
+    preg_match("/<section id=\"section--ingredients_1-0\" class=\"comp section--ingredients section\">.*?<\/section>/is",$str,$match);
+   // var_dump($match);
+    preg_match_all("/<li.*?>.*?<\/li>/is",$match[0],$match2);
+    /*preg_match("/<ul.*?>.*?<\/ul>/is",$match[0],$match2);*/
+    var_dump($match2);
+}
+
+function getStep($str){
+    preg_match("/<section id=\"section--instructions_1-0\" class=\"comp section--instructions section\">.*?<\/section>/is",$str,$match);
+   // var_dump($match);
+    preg_match_all("/<li.*?>.*?<\/li>/is",$match[0],$match2);
+    /*preg_match("/<ul.*?>.*?<\/ul>/is",$match[0],$match2);*/
+    var_dump($match2);
 }
 
 function deleteAllTestImage($path){
@@ -519,6 +543,7 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
 				</div>
 				<input id="name" type="text" name="" value="<?php echo $name; ?>" size="100">
 			</div>
+            <br>
 			<div style="display: flex;align-items: baseline;">
 				<div class="label-input">
 					<span >URL индексной страницы</span>
@@ -537,6 +562,7 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
 				</div>
 				<input id="two" type="text" name="" value="<?php echo htmlentities( $prok_end_index); ?>" size="120">
 			</div>
+            <br>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span >Заголовок</span>
@@ -555,13 +581,27 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
 				</div>
 				<input id="twoContent" type="text" name="" value="<?php echo htmlentities( $prok_end); ?>" size="120">
 			</div>
+            <br>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">шаблон для поиска ингридиентов</span>
+                </div>
+                <input id="prIng" type="text" name="" value="<?php echo htmlentities( "в разработке"); ?>" size="120">
+            </div>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">шаблон для поиска шагов</span>
+                </div>
+                <input id="prStep" type="text" name="" value="<?php echo htmlentities( "в разработке"); ?>" size="120">
+            </div>
 		</div>
+        <br>
 		<?php
 			prok_process_display($process_arr,$id);
 		?>
-		<button id="dddd" onclick="getContent()">OK</button>
-		<button id="dddd" onclick="getTestContent()">TEST</button>
-		<button id="save" onclick="saveOptions(<?php echo $id; ?>)">SAVE</button>
+		<button id="dddd" class="button" onclick="getContent()">OK</button>
+		<button id="dddd" class="button" onclick="getTestContent()">TEST</button>
+		<button id="save" class="button" onclick="saveOptions(<?php echo $id; ?>)">SAVE</button>
 <!-- 		<button id="test" onclick="test()">TEST</button> -->
 	</div>
 	<div id="response"></div>
