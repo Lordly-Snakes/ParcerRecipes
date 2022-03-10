@@ -8,12 +8,31 @@
  */
 
 
+class Debug{
+    private $debug_data;
+    public function __construct()
+    {
+        $this->debug_data = [];
+    }
+
+    public function addDebugData($data){
+        $this->debug_data[] = $data;
+    }
+
+    public function getDebugData(){
+        return $this->debug_data;
+    }
+}
+
+$Debug = new Debug();
+
 function save_img_stn($url_image,$path_to_save,$name){
 	file_put_contents($path_to_save."/".$name, file_get_contents($url_image));
 }
 
 function saveImgCurl($url_image, $path_to_save, $name){
 	$ch = curl_init($url_image);
+
 	$fp = fopen($path_to_save."/".$name, 'wb');
 	curl_setopt($ch, CURLOPT_FILE, $fp);
 	curl_setopt($ch, CURLOPT_HEADER, 0);
@@ -27,7 +46,7 @@ function getImageFromContent($content){
 		//echo print_r($matches[1]);
 		return $matches[1];
 	}else{
-		echo "image not found";
+		//echo "image not found";
 		return NULL;
 	}
 }
@@ -40,6 +59,7 @@ function saveImages($arr_images_urls, $path, $prefix_name){
     }
 	for($i=0;$i<count($arr_images_urls);$i++){
 		$img_url = $arr_images_urls[$i];
+
         $prefix_name = str_replace(" ","-",$prefix_name);
 		$name_tmp = $prefix_name."-".time()."-".$i;
 		saveImgCurl($img_url,wp_upload_dir()['basedir']."/$path",$name_tmp);
@@ -56,7 +76,7 @@ function saveImages($arr_images_urls, $path, $prefix_name){
 
 function saveImagesAndAddToPost($post_id, $file, $desc = null , $thumb = false){
 	global $debug; // определяется за пределами функции как true
-
+    global $Debug;
 	if( ! function_exists('media_handle_sideload') ) {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -75,21 +95,21 @@ function saveImagesAndAddToPost($post_id, $file, $desc = null , $thumb = false){
 	// Удаляем временный файл, при ошибке
 	if ( is_wp_error( $tmp ) ) {
 		$file_array['tmp_name'] = '';
-		if( $debug ) echo 'Ошибка нет временного файла! <br />';
+		if( $debug ) $Debug->addDebugData( "Ошибка нет временного файла! <br />");
 	}
 
 	// проверки при дебаге
 	if( $debug ){
-		//echo 'File array: <br />';
-		//var_dump( $file_array );
-		//echo '<br /> Post id: ' . $post_id . '<br />';
+        $Debug->addDebugData( 'File array: <br />');
+        $Debug->addDebugData( $file_array );
+        $Debug->addDebugData( '<br /> Post id: ' . $post_id . '<br />');
 	}
 
 	$id = media_handle_sideload( $file_array, $post_id, $desc );
 
 	// Проверяем работу функции
 	if ( is_wp_error( $id ) ) {
-		var_dump( $id->get_error_messages() );
+        $Debug->addDebugData( $id->get_error_messages() );
 	} else {
 		if($thumb){
 			update_post_meta( $post_id, '_thumbnail_id', $id );	
@@ -102,6 +122,8 @@ function saveImagesAndAddToPost($post_id, $file, $desc = null , $thumb = false){
 
 add_action( 'wp_ajax_prok_action', 'prok_action_callback' );
 function prok_action_callback(){
+    global $Debug;
+    $res_str = "";
 	error_log("---------------------------------------------------------------START--simple");
 
 	$url = $_POST['url'];
@@ -111,53 +133,66 @@ function prok_action_callback(){
 	$endw = $_POST['end'];
 	$test = $_POST['test'];
     $title = $_POST['title'];
-
+    $ingr_pr = stripslashes(getPost('ingr_pr'));
+    $step_pr = stripslashes(getPost('step_pr'));
+    $timeAuto = getPost('autopost');
 	$process_arr = json_decode(stripslashes($_POST["process"]));
 	
 	$arr = getHrefs2($url,$begin,$end,$process_arr);
-    echo "<div class=\"res-content\">";
+    $res_str .= $arr[1];
+    $arr = $arr[0];
+    $res_str = $res_str."<div class=\"res-content\">";
 	if($test){
-		getContentToSave($arr[0],$beginw,$endw,$title,$process_arr,true);
+        $res_str =$res_str.getContentToSave($arr[0],$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr);
 	}else{
-		getContentToSave($arr[0],$beginw,$endw,$title,$process_arr,false);
+        $res_str = $res_str.getContentToSave($arr[0],$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr);
 	}
-    echo "</div>";	
+    $res_str = $res_str."</div>";
 
 	// выход нужен для того, чтобы в ответе не было ничего лишнего,
 	// только то что возвращает функция
+    standartResponse(100,'DATA_OK',($res_str),null,$Debug->getDebugData());
+
 	wp_die();
+}
+
+
+function getPost($nameData){
+    return $_POST[$nameData];
 }
 
 add_action( 'wp_ajax_prok_save', 'prok_save' );
 function prok_save(){
-	$id = $_POST['id'];
-	$url = $_POST['url'];
-	$begin = $_POST['beginCon'];
-	$end = $_POST['endCon'];
-	$beginC = $_POST['begin'];
-	$endC = $_POST['end'];
-	$name = $_POST['name'];
-    $title = $_POST['title'];
+	$id = getPost('id');
+	$url = getPost('url');
+	$begin = getPost('beginCon');
+	$end = getPost('endCon');
+	$beginC = getPost('begin');
+	$endC = getPost('end');
+	$name = getPost('name');
+    $title = getPost('title');
+    $ingr_pr = getPost('ingr_pr');
+    $step_pr = getPost('step_pr');
+    $timeAuto = getPost('autopost');
 	$process_arr = json_decode(stripslashes($_POST["process"]));
 	$begin = str_replace('\"','"',$begin);
 	$end = str_replace('\"','"',$end);
 	$beginC = str_replace('\"','"',$beginC);
 	$endC = str_replace('\"','"',$endC);
     $title = stripslashes($title);
-	updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title);
+    $ingr_pr = stripslashes($ingr_pr);
+    $step_pr = stripslashes($step_pr);
+    $timeAuto = stripslashes($timeAuto);
+	updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title,$ingr_pr,$step_pr,$timeAuto);
 	for($i=0;$i<50;$i++){
 		$obj = getProcessData($id,$i);
 		/*
-		$process_arr[$i] = array(4) {
-			[0]=>
-			string(6) "search"
-			[1]=>
-			string(5) "index"
-			[2]=>
-			string(4) "name"
-			[3]=>
-			string(11) "replacement"
-		 } 
+            $process_arr[$i] = array(4) {
+                [0]=>string(6) "search"
+                [1]=>string(5) "index"
+                [2]=>string(4) "name"
+                [3]=>string(11) "replacement"
+            }
 		*/
 		$val = str_replace('\"','"',$process_arr[$i][0]);
 		$replacement = str_replace('\"','"',$process_arr[$i][3]);
@@ -165,17 +200,19 @@ function prok_save(){
 		if(!is_null($obj) && $val != ""){
 			updateProcessData($id,$val,$i,$status,$replacement);
 		}else if(is_null($obj) && $val != ""){
-			addProcessData($id,$val,$i,$status,$replacement);
+			addProcessData($id, $val, $i, $status, $replacement);
 		}else if(!is_null($obj) && $val == ""){
 			deleteProcessData($id,$i);
 		}
 	}
 	//var_dump($process_arr);
-	echo "OK";
+	//echo "OK";
+
+    standartResponse(100,'DATA_SAVED','data saved');
 	wp_die();
 }
 
-function addProcessData($id_lent,$val,$num,$status,$replacement){
+function addProcessData($id_lent, $val, $num, $status, $replacement){
 	global $wpdb;
 	$wpdb->query( "INSERT INTO prok_process_table (id, id_lent, value, number_list,status,replacement) VALUES (NULL, '$id_lent', '$val', '$num', '$status', '$replacement')" );
 }
@@ -219,6 +256,7 @@ function prok_del(){
 
 //getHrefs($url,$begin,$end);
 function getHrefs2($url,$begin,$end,$arr){
+    $res_str = "";
     $buf=implode("",file($url));
 	$begin = str_replace('\"','"',$begin);
 	$end = str_replace('\"','"',$end);
@@ -226,19 +264,19 @@ function getHrefs2($url,$begin,$end,$arr){
     $end = preg_quote($end,"/");
     if(preg_match_all("/$begin.*?$end/is",$buf,$matches) != NULL){
         $content = $matches[0][0];
-	
+
 		$content = useProccess($arr,$content,'index');
 		preg_match_all("/<a[^>]+href=\"(.*?)\"[^>]+>/i",$content,$matches2);
         //error_log(print_r($matches2[1]));
-        echo "<br>Кол-во ссылок: ".count($matches2[1])."<br><b>Ссылки:</b><br>";
+        $res_str .= "<br>Кол-во ссылок: ".count($matches2[1])."<br><b>Ссылки:</b><br>";
         for($i=0;$i<count($matches2[1]);$i++){
-			echo $i.": ".$matches2[1][$i]."<br>";
+            $res_str .= $i.": ".$matches2[1][$i]."<br>";
 			
 		}
 		
-		return $matches2[1];
+		return [$matches2[1],$res_str];
     }else{
-		echo "Ссылки не найдены";
+		//echo "Ссылки не найдены";
 	}
 	error_log("---------------------------------------------------------------END--simple");
 }
@@ -264,7 +302,52 @@ function savePost($title,$content,$post_categories){
 	return $post_id;
 }
 
-function getContentToSave($url,$begin,$end,$title,$arr,$bool){
+
+function prok_get_special_array_format_ingridients($arr){
+
+    //$arr = explode("\n", $text);
+    $arr3 = [];
+    for($i=0;$i<count($arr);$i++){
+        // teaspoon ounce pounds kg mg ml cup cups tablespoon
+        preg_match('/([0-9\/to\-]{1,})/is',$arr[$i],$mmm);
+        $c = preg_quote($mmm[1],"/");
+        preg_match("/$c (.*?) /is",$arr[$i],$mmm2);
+        $metr = $mmm2[1];
+        preg_match("/$metr ([\w\s\S]+)/is",$arr[$i],$mmm3);
+        //$Debug->addDebugData($arr3);
+        $arr3[] = array(
+            "name"=>trim($mmm3[1]),
+            "term"=>"",
+            "count"=>$mmm[1],
+            "text"=>trim($mmm2[1]),
+        );
+    }
+    return $arr3;
+}
+
+function prok_get_special_array_format_step($arr){
+    global $Debug;
+    $Debug->addDebugData($arr);
+    $arr3= [];
+    for($i=0;$i<count($arr);$i++){
+        $arr[$i] = preg_replace("/<.*?>/is","",$arr[$i]);
+        $arr3[] = array(
+            "text"=>$arr[$i],
+            "photo"=>0,
+
+        );
+    }
+    return $arr3;
+}
+
+function addMetaArr($arr,$title_meta,$post_id){
+    global $Debug;
+    $Debug->addDebugData($arr);
+
+    update_post_meta( $post_id, $title_meta, $arr);
+}
+
+function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step){
     $buf=implode("",file($url));
 	$begin = str_replace('\"','"',$begin);
 	$end = str_replace('\"','"',$end);
@@ -272,12 +355,13 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool){
 	$title = stripslashes($title);
     $begin = preg_quote($begin,"/");
     $end = preg_quote($end,"/");
-    getIngr($buf);
-    getStep($buf);
-	//var_dump($begin);
+
+
     preg_match("/$title/is",$buf,$title_preg);
-	//var_dump($title_preg);
+
     if(preg_match_all("/$begin.*?$end/is",$buf,$matches) != NULL){
+        global $Debug;
+        $res_str = "";
         // Получение текста
 		$str= $matches[0][0];
         // Обработка шаблонами обработки
@@ -289,16 +373,26 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool){
         $res = saveImages($image_arr, $path,$title_preg[1]);
 		$str = replaceImages($image_arr,$res[1],$str);
 
+
         // Формируем вывод
-		echo "<br><b>Заголовок: </b>";
-		echo $title_preg[1];
-		echo "<br><b>Текст:</b><br>";
-		echo "$str";
+        $res_str =$res_str."<br><b>Заголовок: </b>";
+        $res_str =$res_str.$title_preg[1];
+        $res_str =$res_str."<br><b>Текст:</b><br>";
+        $res_str =$res_str."$str";
 
 		// Вставляем запись в базу данных
 		if(!$bool){
             // Сохраняем и вставляем в бд запись
 			$post_id = savePost($title_preg[1],$str,array( 1 ));
+
+            $ingridients_arr = getStepOrIngr(useProccess($arr,$buf,'page'),$ingr);
+            $ingridients_arr = prok_get_special_array_format_ingridients($ingridients_arr);
+            $step_arr = getStepOrIngr($buf,$step);
+            $step_arr = prok_get_special_array_format_step($step_arr);
+            $Debug->addDebugData($step_arr);
+            addMetaArr($ingridients_arr,'recipe_ingredients',$post_id);
+            addMetaArr($step_arr,"recipe_steps",$post_id);
+
 			$images_urls = $res[0];
             // Сохраняем изображения в бд и медиатеке
 			for($i = 0;$i < count($images_urls);$i++){
@@ -310,26 +404,21 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool){
 				}
 			}
 		}
+        return $res_str;
     }else{
-		echo "NOT MATCH";
+		return null;
 	}
 	error_log("---------------------------------------------------------------END--simple");
 }
 
-function getIngr($str){
-    preg_match("/<section id=\"section--ingredients_1-0\" class=\"comp section--ingredients section\">.*?<\/section>/is",$str,$match);
-   // var_dump($match);
-    preg_match_all("/<li.*?>.*?<\/li>/is",$match[0],$match2);
-    /*preg_match("/<ul.*?>.*?<\/ul>/is",$match[0],$match2);*/
-    var_dump($match2);
-}
 
-function getStep($str){
-    preg_match("/<section id=\"section--instructions_1-0\" class=\"comp section--instructions section\">.*?<\/section>/is",$str,$match);
-   // var_dump($match);
-    preg_match_all("/<li.*?>.*?<\/li>/is",$match[0],$match2);
-    /*preg_match("/<ul.*?>.*?<\/ul>/is",$match[0],$match2);*/
-    var_dump($match2);
+
+function getStepOrIngr($str,$pattern){
+
+    preg_match("/$pattern/is",$str,$match);
+    preg_match_all("/<li.*?>(.*?)<\/li>/is",$match[0],$match2);
+    //var_dump($match2[1]);
+    return $match2[1];
 }
 
 function deleteAllTestImage($path){
@@ -339,6 +428,7 @@ function deleteAllTestImage($path){
         }
     }
 }
+
 
 function useProccess($arr,$text,$place){
 	for($i=0;$i<50;$i++){
@@ -480,13 +570,13 @@ function prk_init() {
  	if($actionState=='default'){
  		createMainTable();
  	}else if($actionState=='add'){
- 		$wpdb->query( "INSERT INTO prok_table (ID, name, title_preg ,index_url, prok_begin_index, prok_end_index, prok_begin, prok_end) VALUES (NULL, '0', '0','0', '0', '0', '0', '0')" );
+ 		$wpdb->query( "INSERT INTO prok_table (ID, name, title_preg ,index_url, prok_begin_index, prok_end_index, prok_begin, prok_end,ingr_pr,step_pr,autoupdate) VALUES (NULL, '0', '0','0', '0', '0', '0', '0','0','0','0')" );
  		$lastid = $wpdb->insert_id;
  		//addProcessData($lastid);
  		$obj = getData($lastid);
 		
 		
- 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,null);
+ 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->step_pr,$obj->autoupdate,null);
 		
  	}else if($actionState=='edit'){
  		$id = $_GET['prk-id'];
@@ -495,7 +585,7 @@ function prk_init() {
  		for($i=0;$i<50;$i++){
  			$arr[] = getProcessData($id,$i);
  		}
- 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$arr);
+ 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->ingr_pr,$obj->step_pr,$obj->autoupdate,$arr);
  	}else{
  		createMainTable();
  	}
@@ -510,10 +600,10 @@ function getData($id){
 	return $obj;
 }
 
-function updateData($id,$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title){
+function updateData($id,$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$ingr_pr,$step_pr,$autoupdate){
 	global $wpdb;
-	$query = $wpdb->prepare('UPDATE prok_table SET index_url=%s,prok_begin_index=%s,prok_end_index=%s,prok_begin=%s,prok_end=%s,name=%s,title_preg=%s where ID=%d',
-        [$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$id]);
+	$query = $wpdb->prepare('UPDATE prok_table SET index_url=%s,prok_begin_index=%s,prok_end_index=%s,prok_begin=%s,prok_end=%s,name=%s,title_preg=%s,ingr_pr=%s,step_pr=%s,autoupdate=%s where ID=%d',
+        [$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$ingr_pr,$step_pr,$autoupdate,$id]);
 	$wpdb->query( $query);
 	//lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end);
 }
@@ -526,7 +616,7 @@ function deleteData($id){
 }
 
 
-function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$id,$name,$title,$process_arr){
+function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$id,$name,$title,$ingr_pr,$step_pr,$autoupdate,$process_arr){
 		?>
 		<style>
 		.updated{
@@ -586,13 +676,20 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
                 <div class="label-input">
                     <span  class="label-input">шаблон для поиска ингридиентов</span>
                 </div>
-                <input id="prIng" type="text" name="" value="<?php echo htmlentities( "в разработке"); ?>" size="120">
+                <input id="prIng" type="text" name="" value="<?php echo htmlentities( $ingr_pr); ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">шаблон для поиска шагов</span>
                 </div>
-                <input id="prStep" type="text" name="" value="<?php echo htmlentities( "в разработке"); ?>" size="120">
+                <input id="prStep" type="text" name="" value="<?php echo htmlentities( $step_pr); ?>" size="120">
+            </div>
+            <br>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">Время автообновления</span>
+                </div>
+                <input id="timeAutoupdate" type="text" name="" value="<?php echo $autoupdate; ?>" size="120">
             </div>
 		</div>
         <br>
@@ -731,5 +828,34 @@ class ProccesObj{
         $this->title = "";
 	}
 }
+
+class Response{
+    public $code;
+    public $title_code;
+    public  $data;
+    public $error_message;
+    public $debug_data;
+
+    public function __construct($code,$title_code,$data,$error_message = null,$debug_data = null)
+    {
+        $this->code = $code;
+        $this->title_code = $title_code;
+        $this->data = $data;
+        $this->error_message = $error_message;
+        $this->debug_data = $debug_data;
+    }
+
+    public function toJSONconv($obj){
+        //var_dump($this);
+        return json_encode($obj);
+    }
+}
+
+// 100 все успешно
+function standartResponse($code,$title_code,$data,$error_message = null,$debug_data = null){
+    $res = new Response($code,$title_code,$data,$error_message,$debug_data);
+    echo  $res->toJSONconv($res);
+}
+
 
 ?>

@@ -39,7 +39,7 @@ function getHrefs(){
 function getContent(){
 	jQuery("#response").html('Загрузка...');
 	console.log(jQuery('#one').val());
-	var data = {
+	var datavar = {
 		action: 'prok_action',
 		whatever: 1234,
 		beginCon: getVal('#one'),
@@ -50,16 +50,27 @@ function getContent(){
 		begin: getVal('#oneContent'),
 		end: getVal('#twoContent'),
 		title: getVal('#title'),
+		ingr_pr:getVal('#prIng'),
+		step_pr:getVal('#prStep'),
+		autopost:getVal('#timeAutoupdate'),
 		process: JSON.stringify( getProcessData())
 	};
 
 	// с версии 2.8 'ajaxurl' всегда определен в админке
-	jQuery.post( ajaxurl, data, function( response ){
-		jQuery("#response").html('Получено с сервера: ' + response);
-		console.log('Получено с сервера: ' + response);
-		//alert( 'Получено с сервера: ' + response );
+	jQuery(function($){
+
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: (datavar),
+			//dataType: "json", // можно также передать в виде массива или объекта
+			success: (data) => simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору'),
+			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
+		});
+		// если элемент – ссылка, то не забываем:
+		// return false;
+
 	});
-	
 // 	jQuery(document).ready( function( $ ){
 		
 // 	} );
@@ -69,7 +80,7 @@ function getContent(){
 function getTestContent(){
 	console.log(jQuery('#one').val());
 	jQuery("#response").html('Загрузка...');
-	var data = {
+	var datavar = {
 		action: 'prok_action',
 		whatever: 1234,
 		beginCon: getVal('#one'),
@@ -80,15 +91,34 @@ function getTestContent(){
 		begin: getVal('#oneContent'),
 		end: getVal('#twoContent'),
 		title: getVal('#title'),
+		ingr_pr:getVal('#prIng'),
+		step_pr:getVal('#prStep'),
+		autopost:getVal('#timeAutoupdate'),
 		process: JSON.stringify( getProcessData())
 	};
 
 	// с версии 2.8 'ajaxurl' всегда определен в админке
-	jQuery.post( ajaxurl, data, function( response ){
-		jQuery("#response").html('Получено с сервера: ' + response);
-		console.log('Получено с сервера: ' + response);
-		//alert( 'Получено с сервера: ' + response );
+	// jQuery.post( ajaxurl, data, function( response ){
+	// 	jQuery("#response").html('Получено с сервера: ' + response);
+	// 	console.log('Получено с сервера: ' + response);
+	// 	//alert( 'Получено с сервера: ' + response );
+	// });
+
+	jQuery(function($){
+
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: (datavar),
+			//dataType: "json", // можно также передать в виде массива или объекта
+			success: (data) => simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору'),
+			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
+		});
+		// если элемент – ссылка, то не забываем:
+		// return false;
+
 	});
+
 	
 // 	jQuery(document).ready( function( $ ){
 		
@@ -113,6 +143,9 @@ function saveOptions(id){
 			begin: getVal('#oneContent'),
 			end: getVal('#twoContent'),
 			title: getVal('#title'),
+			ingr_pr:getVal('#prIng'),
+			step_pr:getVal('#prStep'),
+			autopost:getVal('#timeAutoupdate'),
 			process: JSON.stringify( getProcessData())
 	};
 
@@ -126,12 +159,10 @@ function saveOptions(id){
 		$.ajax({
 			url: ajaxurl,
 			type: 'POST',
-			data: (datavar), // можно также передать в виде массива или объекта
-			success: function( data ) {
-				//jQuery("#response").html('Получено с сервера: ' + data);
-				console.log('Получено с сервера: ' + data);
-				jQuery("#response").html('Сохранено');
-			}
+			data: (datavar),
+			//dataType: "json", // можно также передать в виде массива или объекта
+			success: (data) => simpleProcessResponse(data,'Сохранено', 'Ошибка на стороне сервера обратитесь к администратору'),
+			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
 		});
 		// если элемент – ссылка, то не забываем:
 		// return false;
@@ -139,6 +170,46 @@ function saveOptions(id){
  	});
 
 
+}
+
+
+function simpleProcessResponse(data,responseOk,responseEr){
+	console.log(data);
+	let res = JSON.parse(data);
+	if(res.code == 100){
+		console.dir(res);
+		if (responseOk != null){
+			jQuery("#response").html(responseOk);
+		}else{
+			jQuery("#response").html(res.data);
+		}
+
+	}else{
+		console.dir(res);
+		jQuery("#response").html(responseEr);
+	}
+	return res;
+}
+
+function processError(jqXHR, exception, message){
+	var msg = '';
+	if (jqXHR.status === 0) {
+		msg = 'Not connect.\n Verify Network.';
+	} else if (jqXHR.status == 404) {
+		msg = 'Requested page not found. [404]';
+	} else if (jqXHR.status == 500) {
+		msg = 'Internal Server Error [500].';
+	} else if (exception === 'parsererror') {
+		msg = 'Requested JSON parse failed.';
+	} else if (exception === 'timeout') {
+		msg = 'Time out error.';
+	} else if (exception === 'abort') {
+		msg = 'Ajax request aborted.';
+	} else {
+		msg = 'Uncaught Error.\n' + jqXHR.responseText;
+	}
+	console.log('Получено с сервера: ' + msg);
+	jQuery("#response").html(message);
 }
 
 function del(){
