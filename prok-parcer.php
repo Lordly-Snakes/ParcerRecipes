@@ -61,7 +61,7 @@ function saveImages($arr_images_urls, $path, $prefix_name){
 		$img_url = $arr_images_urls[$i];
 
         $prefix_name = str_replace(" ","-",$prefix_name);
-		$name_tmp = $prefix_name."-".time()."-".$i;
+		$name_tmp = $prefix_name."-".time()."-".$i.".png";
 		saveImgCurl($img_url,wp_upload_dir()['basedir']."/$path",$name_tmp);
 		error_log($name_tmp);
 		//echo "$img_url";
