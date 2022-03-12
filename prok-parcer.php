@@ -120,40 +120,53 @@ function saveImagesAndAddToPost($post_id, $file, $desc = null , $thumb = false){
 	@unlink( $tmp );
 }
 
+
+add_action('wp_ajax_prok_get_urls','getUrls');
+function getUrls(){
+    global $Debug;
+    $url = $_POST['url'];
+    $id = getPost('id');
+    $begin = $_POST['beginCon'];
+    $end = $_POST['endCon'];
+    $process_arr = json_decode(stripslashes($_POST["process"]));
+    $arr = getUrlsInDocument($url,$begin,$end,$process_arr);
+    $Debug->addDebugData($id);
+    $str ="";
+    for($i=0;$i<count($arr);$i++){
+        $str.=$arr[$i].";";
+    }
+    updateDataUrls($id,$str);
+    standartResponse(100, 'URLS_OK', ($arr));
+}
+
+
+
 add_action( 'wp_ajax_prok_action', 'prok_action_callback' );
 function prok_action_callback(){
-    global $Debug;
     $res_str = "";
 	error_log("---------------------------------------------------------------START--simple");
-
 	$url = $_POST['url'];
-	$begin = $_POST['beginCon'];
-	$end = $_POST['endCon'];
 	$beginw = $_POST['begin'];
 	$endw = $_POST['end'];
 	$test = $_POST['test'];
     $title = $_POST['title'];
+
     $ingr_pr = stripslashes(getPost('ingr_pr'));
     $step_pr = stripslashes(getPost('step_pr'));
     $timeAuto = getPost('autopost');
 	$process_arr = json_decode(stripslashes($_POST["process"]));
-	
-	$arr = getHrefs2($url,$begin,$end,$process_arr);
-    $res_str .= $arr[1];
-    $arr = $arr[0];
     $res_str = $res_str."<div class=\"res-content\">";
 	if($test){
-        $res_str =$res_str.getContentToSave($arr[0],$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr);
+        $res_str =$res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr);
 	}else{
-        $res_str = $res_str.getContentToSave($arr[0],$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr);
+        $res_str = $res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr);
 	}
     $res_str = $res_str."</div>";
-
 	// выход нужен для того, чтобы в ответе не было ничего лишнего,
 	// только то что возвращает функция
-    standartResponse(100,'DATA_OK',($res_str),null,$Debug->getDebugData());
+    standartResponse(100,'DATA_OK',($res_str),null);
 
-	wp_die();
+
 }
 
 
@@ -174,6 +187,8 @@ function prok_save(){
     $ingr_pr = getPost('ingr_pr');
     $step_pr = getPost('step_pr');
     $timeAuto = getPost('autopost');
+    $count_add_post=getPost('countAddPost');
+    $first_number =getPost('firstNumber');
 	$process_arr = json_decode(stripslashes($_POST["process"]));
 	$begin = str_replace('\"','"',$begin);
 	$end = str_replace('\"','"',$end);
@@ -183,7 +198,7 @@ function prok_save(){
     $ingr_pr = stripslashes($ingr_pr);
     $step_pr = stripslashes($step_pr);
     $timeAuto = stripslashes($timeAuto);
-	updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title,$ingr_pr,$step_pr,$timeAuto);
+	updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title,$ingr_pr,$step_pr,$timeAuto,$count_add_post,$first_number);
 	for($i=0;$i<50;$i++){
 		$obj = getProcessData($id,$i);
 		/*
@@ -216,7 +231,6 @@ function addProcessData($id_lent, $val, $num, $status, $replacement){
 	global $wpdb;
 	$wpdb->query( "INSERT INTO prok_process_table (id, id_lent, value, number_list,status,replacement) VALUES (NULL, '$id_lent', '$val', '$num', '$status', '$replacement')" );
 }
-
 function updateProcessData($id_lent,$val,$num,$status,$replacement){
 	global $wpdb;
 	$query = $wpdb->prepare('UPDATE prok_process_table SET value=%s,status=%s,replacement=%s where id_lent=%d and number_list=%d',[$val,$status,$replacement,$id_lent,$num]);
@@ -255,28 +269,32 @@ function prok_del(){
 //$url = "https://www.simplyrecipes.com/dinner-recipes-5091433";
 
 //getHrefs($url,$begin,$end);
-function getHrefs2($url,$begin,$end,$arr){
+function getUrlsInDocument($url, $begin, $end, $arr): ?array{
+    global $Debug;
     $res_str = "";
     $buf=implode("",file($url));
 	$begin = str_replace('\"','"',$begin);
 	$end = str_replace('\"','"',$end);
     $begin = preg_quote($begin,"/");
     $end = preg_quote($end,"/");
-    if(preg_match_all("/$begin.*?$end/is",$buf,$matches) != NULL){
+    preg_match_all("/$begin.*?$end/is",$buf,$matches);
+    if(!is_null($matches)){
         $content = $matches[0][0];
-
 		$content = useProccess($arr,$content,'index');
 		preg_match_all("/<a[^>]+href=\"(.*?)\"[^>]+>/i",$content,$matches2);
-        //error_log(print_r($matches2[1]));
-        $res_str .= "<br>Кол-во ссылок: ".count($matches2[1])."<br><b>Ссылки:</b><br>";
-        for($i=0;$i<count($matches2[1]);$i++){
-            $res_str .= $i.": ".$matches2[1][$i]."<br>";
-			
-		}
-		
-		return [$matches2[1],$res_str];
+        if(!is_null($matches2)) {
+            $res_str .= "<br>Кол-во ссылок: " . count($matches2[1]) . "<br><b>Ссылки:</b><br>";
+            for ($i = 0; $i < count($matches2[1]); $i++) {
+                $res_str .= $i . ": " . $matches2[1][$i] . "<br>";
+            }
+            return $matches2[1];
+        }else{
+            $Debug->addDebugData("NOT_FOUND_URLS_IN_SEARCH_ZONE");
+            standartResponse(200,"NOT_FOUND_URLS_IN_SEARCH_ZONE",null,"Ссылки не найдены, попробуйте сменить зону поиска");
+        }
     }else{
-		//echo "Ссылки не найдены";
+        $Debug->addDebugData("NOT_FOUND_SEARCH_ZONE");
+        standartResponse(200,"NOT_FOUND_SEARCH_ZONE",null,"Зона поиска задана неверно, попробуйте сменить зону поиска");
 	}
 	error_log("---------------------------------------------------------------END--simple");
 }
@@ -576,16 +594,16 @@ function prk_init() {
  		$obj = getData($lastid);
 		
 		
- 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->step_pr,$obj->autoupdate,null);
+ 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->ingr_pr,$obj->step_pr,$obj->autoupdate,$obj->count_add_post,$obj->first_number);
 		
  	}else if($actionState=='edit'){
  		$id = $_GET['prk-id'];
  		$obj = getData($id);
- 		$arr = [];
- 		for($i=0;$i<50;$i++){
- 			$arr[] = getProcessData($id,$i);
- 		}
- 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->ingr_pr,$obj->step_pr,$obj->autoupdate,$arr);
+// 		$arr = [];
+// 		for($i=0;$i<50;$i++){
+// 			$arr[] = getProcessData($id,$i);
+// 		}
+ 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->ingr_pr,$obj->step_pr,$obj->autoupdate,$obj->count_add_post,$obj->first_number);
  	}else{
  		createMainTable();
  	}
@@ -600,13 +618,21 @@ function getData($id){
 	return $obj;
 }
 
-function updateData($id,$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$ingr_pr,$step_pr,$autoupdate){
+function updateData($id,$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$ingr_pr,$step_pr,$autoupdate,$count_add_post,$first_number){
 	global $wpdb;
-	$query = $wpdb->prepare('UPDATE prok_table SET index_url=%s,prok_begin_index=%s,prok_end_index=%s,prok_begin=%s,prok_end=%s,name=%s,title_preg=%s,ingr_pr=%s,step_pr=%s,autoupdate=%s where ID=%d',
-        [$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$ingr_pr,$step_pr,$autoupdate,$id]);
+	$query = $wpdb->prepare('UPDATE prok_table SET index_url=%s,prok_begin_index=%s,prok_end_index=%s,prok_begin=%s,prok_end=%s,name=%s,title_preg=%s,ingr_pr=%s,step_pr=%s,autoupdate=%s,count_add_post=%s,first_number=%s where ID=%d',
+        [$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$ingr_pr,$step_pr,$autoupdate,$count_add_post,$first_number,$id]);
 	$wpdb->query( $query);
 	//lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end);
 }
+
+function updateDataUrls($id,$urls){
+    global $wpdb;
+    $query = $wpdb->prepare('UPDATE prok_table SET urls=%s where ID=%d',  [$urls,$id]);
+    $wpdb->query( $query);
+    //lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end);
+}
+
 
 function deleteData($id){
 	global $wpdb;
@@ -616,7 +642,7 @@ function deleteData($id){
 }
 
 
-function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$id,$name,$title,$ingr_pr,$step_pr,$autoupdate,$process_arr){
+function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$id,$name,$title,$ingr_pr,$step_pr,$autoupdate,$countAddPost,$firstNumber){
 		?>
 		<style>
 		.updated{
@@ -691,16 +717,29 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
                 </div>
                 <input id="timeAutoupdate" type="text" name="" value="<?php echo $autoupdate; ?>" size="120">
             </div>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">Кол-во записей за один прогон</span>
+                </div>
+                <input id="countAddPost" type="text" name="" value="<?php echo $countAddPost; ?>" size="120">
+            </div>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">Номер первой записей(0-с первой)</span>
+                </div>
+                <input id="firstNumber" type="text" name="" value="<?php echo $firstNumber; ?>" size="120">
+            </div>
 		</div>
         <br>
 		<?php
-			prok_process_display($process_arr,$id);
+			prok_process_display($id);
 		?>
-		<button id="dddd" class="button" onclick="getContent()">OK</button>
-		<button id="dddd" class="button" onclick="getTestContent()">TEST</button>
+		<button id="dddd" class="button" onclick="getHrefs(<?php echo $id; ?>,1)">OK</button>
+        <button id="dddd2" class="button" onclick="getHrefs(<?php echo $id; ?>,0)">TEST</button>
 		<button id="save" class="button" onclick="saveOptions(<?php echo $id; ?>)">SAVE</button>
 <!-- 		<button id="test" onclick="test()">TEST</button> -->
 	</div>
+    <div id="responseHref"></div>
 	<div id="response"></div>
 <?php
 	 
@@ -763,7 +802,7 @@ function prok_option_selector($val){
 }
 
 
-function prok_process_display($process_arr,$id){
+function prok_process_display($id){
 	?>
 <td colspan="2">
                         <fieldset style="width: 1000px;border: 1px solid;padding: 5px;">
@@ -851,10 +890,12 @@ class Response{
     }
 }
 
-// 100 все успешно
-function standartResponse($code,$title_code,$data,$error_message = null,$debug_data = null){
-    $res = new Response($code,$title_code,$data,$error_message,$debug_data);
+
+function standartResponse($code,$title_code,$data,$error_message = null){
+    global $Debug;
+    $res = new Response($code,$title_code,$data,$error_message,$Debug->getDebugData());
     echo  $res->toJSONconv($res);
+    wp_die();
 }
 
 

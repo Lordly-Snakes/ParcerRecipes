@@ -1,52 +1,64 @@
-(function( $ ) {
-	'use strict';
-	
+function getHrefs(id,state){
+	console.log(jQuery('#one').val());
+	jQuery("#responseHref").html('Загрузка...');
+	var datavar = {
+		id: id,
+		action: 'prok_get_urls',
+		whatever: 1234,
+		beginCon: getVal('#one'),
+		endCon: getVal('#two'),
+		url: getVal('#url'),
+		process: JSON.stringify( getProcessData())
+	};
+	jQuery(function($){
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: (datavar),
+			//dataType: "json", // можно также передать в виде массива или объекта
+			success: (data) => {
+				//simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору')
+				let res = JSON.parse(data);
+				if(res.code == 100){
+					console.dir(res);
+					let str = "";
+					str += "<B>Кол-во ссылок: </B>"+res.data.length+"<br>";
+					for(let i = 0; i < res.data.length; i++){
+						str += res.data[i] + "<br>";
+					}
+					jQuery("#responseHref").html(str)
+					if(state){
+						getContent(res.data[0]);
+					}else{
+						getTestContent(res.data[0]);
+					}
 
-	/**
-	 * All of the code for your admin-facing JavaScript source
-	 * should reside in this file.
-	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
-	 */
-	
+				}else{
+					if(res.error_message == null){
+						console.dir(res);
+						jQuery("#response").html('Ошибка на стороне сервера обратитесь к администратору');
+					}else{
+						console.dir(res);
+						jQuery("#response").html(error_message);
+					}
+				}
+				return res;
+			},
+			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
+		});
+	});
 
 
-})( jQuery );
-function getHrefs(){
-	
 }
-function getContent(){
+function getContent(url){
 	jQuery("#response").html('Загрузка...');
+	//jQuery("#responseHref").html('')
 	console.log(jQuery('#one').val());
 	var datavar = {
 		action: 'prok_action',
 		whatever: 1234,
-		beginCon: getVal('#one'),
-		endCon: getVal('#two'),
-		end: '12',
 		test: 0,
-		url: getVal('#url'),
+		url: url,
 		begin: getVal('#oneContent'),
 		end: getVal('#twoContent'),
 		title: getVal('#title'),
@@ -55,7 +67,6 @@ function getContent(){
 		autopost:getVal('#timeAutoupdate'),
 		process: JSON.stringify( getProcessData())
 	};
-
 	// с версии 2.8 'ajaxurl' всегда определен в админке
 	jQuery(function($){
 
@@ -67,27 +78,17 @@ function getContent(){
 			success: (data) => simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору'),
 			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
 		});
-		// если элемент – ссылка, то не забываем:
-		// return false;
-
 	});
-// 	jQuery(document).ready( function( $ ){
-		
-// 	} );
-
 }
 
-function getTestContent(){
+function getTestContent(url){
 	console.log(jQuery('#one').val());
 	jQuery("#response").html('Загрузка...');
 	var datavar = {
 		action: 'prok_action',
 		whatever: 1234,
-		beginCon: getVal('#one'),
-		endCon: getVal('#two'),
-		end: '12',
 		test: 1,
-		url: getVal('#url'),
+		url: url,
 		begin: getVal('#oneContent'),
 		end: getVal('#twoContent'),
 		title: getVal('#title'),
@@ -97,13 +98,6 @@ function getTestContent(){
 		process: JSON.stringify( getProcessData())
 	};
 
-	// с версии 2.8 'ajaxurl' всегда определен в админке
-	// jQuery.post( ajaxurl, data, function( response ){
-	// 	jQuery("#response").html('Получено с сервера: ' + response);
-	// 	console.log('Получено с сервера: ' + response);
-	// 	//alert( 'Получено с сервера: ' + response );
-	// });
-
 	jQuery(function($){
 
 		$.ajax({
@@ -111,25 +105,18 @@ function getTestContent(){
 			type: 'POST',
 			data: (datavar),
 			//dataType: "json", // можно также передать в виде массива или объекта
-			success: (data) => simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору'),
+			success: (data) => { simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору');},
 			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
 		});
-		// если элемент – ссылка, то не забываем:
-		// return false;
-
 	});
-
-	
-// 	jQuery(document).ready( function( $ ){
-		
-// 	} );
-
 }
+
 function getVal(selector){
 	return jQuery(selector).val().toString()
 }
 
 function saveOptions(id){
+	jQuery("#responseHref").html('')
 	jQuery("#response").html('Сохранение...');
 	console.log(jQuery('#one').val());
 	getProcessData();
@@ -143,9 +130,11 @@ function saveOptions(id){
 			begin: getVal('#oneContent'),
 			end: getVal('#twoContent'),
 			title: getVal('#title'),
-			ingr_pr:getVal('#prIng'),
-			step_pr:getVal('#prStep'),
-			autopost:getVal('#timeAutoupdate'),
+			ingr_pr: getVal('#prIng'),
+			step_pr: getVal('#prStep'),
+			autopost: getVal('#timeAutoupdate'),
+			countAddPost: getVal('#countAddPost'),
+			firstNumber: getVal('#firstNumber'),
 			process: JSON.stringify( getProcessData())
 	};
 
@@ -173,20 +162,27 @@ function saveOptions(id){
 }
 
 
-function simpleProcessResponse(data,responseOk,responseEr){
+function simpleProcessResponse(data,responseOk,responseEr,clear = true){
 	console.log(data);
 	let res = JSON.parse(data);
 	if(res.code == 100){
 		console.dir(res);
-		if (responseOk != null){
-			jQuery("#response").html(responseOk);
+		let response = responseOk != null ? responseOk : res.data;
+		if (clear){
+			jQuery("#response").html(response);
 		}else{
-			jQuery("#response").html(res.data);
+			jQuery("#response").append(response);
 		}
 
 	}else{
-		console.dir(res);
-		jQuery("#response").html(responseEr);
+		let response = res.error_message == null ? responseEr : res.error_message;
+		if(clear){
+			console.dir(res);
+			jQuery("#response").html(response);
+		}else{
+			console.dir(res);
+			jQuery("#response").append(response);
+		}
 	}
 	return res;
 }
