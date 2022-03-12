@@ -1,4 +1,4 @@
-function getHrefs(id,state){
+async function getHrefs(id,state){
 	console.log(jQuery('#one').val());
 	jQuery("#responseHref").html('Загрузка...');
 	var datavar = {
@@ -10,8 +10,8 @@ function getHrefs(id,state){
 		url: getVal('#url'),
 		process: JSON.stringify( getProcessData())
 	};
-	jQuery(function($){
-		$.ajax({
+	await jQuery(async function($){
+		 await $.ajax({
 			url: ajaxurl,
 			type: 'POST',
 			data: (datavar),
@@ -26,13 +26,7 @@ function getHrefs(id,state){
 					for(let i = 0; i < res.data.length; i++){
 						str += res.data[i] + "<br>";
 					}
-					jQuery("#responseHref").html(str)
-					if(state){
-						getContent(res.data[0]);
-					}else{
-						getTestContent(res.data[0]);
-					}
-
+					return res.data;
 				}else{
 					if(res.error_message == null){
 						console.dir(res);
@@ -41,8 +35,9 @@ function getHrefs(id,state){
 						console.dir(res);
 						jQuery("#response").html(error_message);
 					}
+					return null;
 				}
-				return res;
+
 			},
 			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
 		});
@@ -50,8 +45,21 @@ function getHrefs(id,state){
 
 
 }
-function getContent(url){
-	jQuery("#response").html('Загрузка...');
+
+async function getHr(id,state){
+	let arr = await getHrefs();
+	let count = getVal("#countAddPost");
+	for(let i = 0; i < count; i++){
+		if(state){
+			await getContent(arr[i]);
+		}else{
+			await getTestContent(arr[i]);
+		}
+	}
+}
+
+async function getContent(url){
+	//jQuery("#response").html('Загрузка...');
 	//jQuery("#responseHref").html('')
 	console.log(jQuery('#one').val());
 	var datavar = {
@@ -68,22 +76,22 @@ function getContent(url){
 		process: JSON.stringify( getProcessData())
 	};
 	// с версии 2.8 'ajaxurl' всегда определен в админке
-	jQuery(function($){
+	await jQuery(async function($){
 
-		$.ajax({
+		await $.ajax({
 			url: ajaxurl,
 			type: 'POST',
 			data: (datavar),
 			//dataType: "json", // можно также передать в виде массива или объекта
-			success: (data) => simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору'),
+			success: (data) => simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору',false),
 			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
 		});
 	});
 }
 
-function getTestContent(url){
+async function getTestContent(url){
 	console.log(jQuery('#one').val());
-	jQuery("#response").html('Загрузка...');
+	//jQuery("#response").html('Загрузка...');
 	var datavar = {
 		action: 'prok_action',
 		whatever: 1234,
@@ -98,14 +106,14 @@ function getTestContent(url){
 		process: JSON.stringify( getProcessData())
 	};
 
-	jQuery(function($){
+	await jQuery(async function($){
 
-		$.ajax({
+		await $.ajax({
 			url: ajaxurl,
 			type: 'POST',
 			data: (datavar),
 			//dataType: "json", // можно также передать в виде массива или объекта
-			success: (data) => { simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору');},
+			success: (data) => { simpleProcessResponse(data,null,'Ошибка на стороне сервера обратитесь к администратору',false);},
 			error :  (jqXHR, exception) => processError(jqXHR, exception, 'Ошибка на стороне сервера обратитесь к администратору')
 		});
 	});

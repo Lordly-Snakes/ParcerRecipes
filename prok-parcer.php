@@ -55,7 +55,7 @@ function saveImages($arr_images_urls, $path, $prefix_name){
 	$images_urls = [];
 	$images_urls_assoc = [];
     if($path == "prok-test-uploads"){
-        deleteAllTestImage($path);
+        //deleteAllTestImage($path);
     }
 	for($i=0;$i<count($arr_images_urls);$i++){
 		$img_url = $arr_images_urls[$i];
@@ -124,6 +124,7 @@ function saveImagesAndAddToPost($post_id, $file, $desc = null , $thumb = false){
 add_action('wp_ajax_prok_get_urls','getUrls');
 function getUrls(){
     global $Debug;
+    deleteAllTestImage( "prok-test-uploads");
     $url = $_POST['url'];
     $id = getPost('id');
     $begin = $_POST['beginCon'];
@@ -734,8 +735,8 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
 		<?php
 			prok_process_display($id);
 		?>
-		<button id="dddd" class="button" onclick="getHrefs(<?php echo $id; ?>,1)">OK</button>
-        <button id="dddd2" class="button" onclick="getHrefs(<?php echo $id; ?>,0)">TEST</button>
+		<button id="dddd" class="button" onclick="getHr(<?php echo $id; ?>,1)">OK</button>
+        <button id="dddd2" class="button" onclick="getHr(<?php echo $id; ?>,0)">TEST</button>
 		<button id="save" class="button" onclick="saveOptions(<?php echo $id; ?>)">SAVE</button>
 <!-- 		<button id="test" onclick="test()">TEST</button> -->
 	</div>
