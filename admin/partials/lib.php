@@ -1,5 +1,160 @@
 <?php
-function loadtext_shortcode2( $atts ) {
+function prok_get_special_array_format_ingridients($arr){
+
+    //$arr = explode("\n", $text);
+    $arr3 = [];
+    for($i=0;$i<count($arr);$i++){
+        // teaspoon ounce pounds kg mg ml cup cups tablespoon
+        preg_match('/([0-9\/to\-]{1,})/is',$arr[$i],$mmm);
+        $c = preg_quote($mmm[1],"/");
+        preg_match("/$c (.*?) /is",$arr[$i],$mmm2);
+        $metr = $mmm2[1];
+        preg_match("/$metr ([\w\s\S]+)/is",$arr[$i],$mmm3);
+        //$Debug->addDebugData($arr3);
+        $arr3[] = array(
+            "name"=>trim($mmm3[1]),
+            "term"=>"",
+            "count"=>$mmm[1],
+            "text"=>trim($mmm2[1]),
+        );
+    }
+    return $arr3;
+}
+
+function prok_get_special_array_format_step($arr){
+    global $Debug;
+    $Debug->addDebugData($arr);
+    $arr3= [];
+    for($i=0;$i<count($arr);$i++){
+        $arr[$i] = preg_replace("/<.*?>/is","",$arr[$i]);
+        $arr3[] = array(
+            "text"=>$arr[$i],
+            "photo"=>0,
+
+        );
+    }
+    return $arr3;
+}
+
+function addMetaArr($arr,$title_meta,$post_id){
+    global $Debug;
+    $Debug->addDebugData($arr);
+
+    update_post_meta( $post_id, $title_meta, $arr);
+}
+
+function getStepOrIngr($str,$pattern){
+
+    preg_match("/$pattern/is",$str,$match);
+    preg_match_all("/<li.*?>(.*?)<\/li>/is",$match[0],$match2);
+    //var_dump($match2[1]);
+    return $match2[1];
+}
+
+function deleteAllTestImage($path){
+    if (file_exists(wp_upload_dir()['basedir']."/$path/")) {
+        foreach (glob(wp_upload_dir()['basedir']."/$path/*") as $file) {
+            unlink($file);
+        }
+    }
+}
+
+function replaceImages($img_search_arr,$img_res_arr,$content){
+    if(count($img_search_arr) == count($img_res_arr)){
+        for($i=0;$i<count($img_search_arr);$i++){
+            $content = str_replace($img_search_arr[$i],$img_res_arr[$img_search_arr[$i]],$content);
+        }
+        return $content;
+    }else{
+        return $content;
+    }
+}
+
+function saveImages($arr_images_urls, $path, $prefix_name){
+    $images_urls = [];
+    $images_urls_assoc = [];
+    if($path == "prok-test-uploads"){
+
+    }
+    for($i=0;$i<count($arr_images_urls);$i++){
+        $img_url = $arr_images_urls[$i];
+
+        $prefix_name = str_replace(" ","-",$prefix_name);
+        $name_tmp = $prefix_name."-".time()."-".$i.".png";
+        saveImgCurl($img_url,wp_upload_dir()['basedir']."/$path",$name_tmp);
+        error_log($name_tmp);
+        //echo "$img_url";
+        //         /prok-$test-uploads/
+        $images_urls[] = wp_upload_dir()['baseurl']."/$path/$name_tmp";
+        $images_urls_assoc[$img_url] = wp_upload_dir()['baseurl']."/$path/$name_tmp";
+    }
+    //error_log("-----------------------------images=>".var_dump($images_urls));
+    $arr = array($images_urls,$images_urls_assoc);
+    return $arr;
+}
+
+function saveImagesAndAddToPost($post_id, $file, $desc = null , $thumb = false){
+    global $debug; // определяется за пределами функции как true
+    global $Debug;
+    if( ! function_exists('media_handle_sideload') ) {
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+    }
+
+    // Загружаем файл во временную директорию
+    $tmp = download_url( $file );
+
+    // Устанавливаем переменные для размещения
+    $file_array = [
+        'name'     => basename( $file ),
+        'tmp_name' => $tmp
+    ];
+
+    // Удаляем временный файл, при ошибке
+    if ( is_wp_error( $tmp ) ) {
+        $file_array['tmp_name'] = '';
+        if( $debug ) $Debug->addDebugData( "Ошибка нет временного файла! <br />");
+    }
+
+    // проверки при дебаге
+    if( $debug ){
+        $Debug->addDebugData( 'File array: <br />');
+        $Debug->addDebugData( $file_array );
+        $Debug->addDebugData( '<br /> Post id: ' . $post_id . '<br />');
+    }
+
+    $id = media_handle_sideload( $file_array, $post_id, $desc );
+
+    // Проверяем работу функции
+    if ( is_wp_error( $id ) ) {
+        $Debug->addDebugData( $id->get_error_messages() );
+    } else {
+        if($thumb){
+            update_post_meta( $post_id, '_thumbnail_id', $id );
+        }
+    }
+
+    // удалим временный файл
+    @unlink( $tmp );
+}
+
+function save_img_stn($url_image,$path_to_save,$name){
+    file_put_contents($path_to_save."/".$name, file_get_contents($url_image));
+}
+
+function saveImgCurl($url_image, $path_to_save, $name){
+    $ch = curl_init($url_image);
+
+    $fp = fopen($path_to_save."/".$name, 'wb');
+    curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_exec($ch);
+    curl_close($ch);
+    fclose($fp);
+}
+
+function loadtext_prok( $atts ) {
 	$atts = shortcode_atts( [
 		'znak' => 'Noname',
 		'dayofweek' => 'сегодня',
@@ -126,15 +281,7 @@ function loadtext_shortcode2( $atts ) {
 }
 
 
-function getHrefs($url,$begin,$end){
-    $buf=implode("",file($url));
-    $begin = preg_quote($begin,'/');
-    $end = preg_quote($end,'/');
-    if(preg_match("/$begin.*?$end/is",$buf,$matches) != NULL){
-        $content = $matches[0];
-        preg_match("/<a[^>]+href=\".*?\"[^>]+>/is",$buf,$matches);
-    }
-}
+
 
 
 function addAbz($str){
