@@ -280,10 +280,6 @@ function loadtext_prok( $atts ) {
 	}
 }
 
-
-
-
-
 function addAbz($str){
 	$str = str_replace("...", " ", $str);
     $pred=explode(".", $str); //разбиваем по предложениям

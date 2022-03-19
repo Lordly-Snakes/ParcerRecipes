@@ -57,17 +57,17 @@
 			for (let i = 0; i < count; i++) {
 				if (state) {
 					console.dir(arr[i])
-					await getContent(arr[i]);
+					await getContent(id);
 				} else {
 					console.dir(arr[i])
-					await getTestContent(arr[i]);
+					await getTestContent(id);
 				}
 			}
 		});
 
 	}
 
-	async function getContent(url) {
+	async function getContent(id) {
 		//jQuery("#response").html('Загрузка...');
 		//jQuery("#responseHref").html('')
 		console.log(jQuery('#one').val());
@@ -75,7 +75,7 @@
 			action: 'prok_action',
 			whatever: 1234,
 			test: 0,
-			url: url,
+			id: id,
 			begin: getVal('#oneContent'),
 			end: getVal('#twoContent'),
 			title: getVal('#title'),
@@ -97,14 +97,14 @@
 
 	}
 
-	async function getTestContent(url) {
+	async function getTestContent(id) {
 		console.log(jQuery('#one').val());
 		//jQuery("#response").html('Загрузка...');
 		var datavar = {
 			action: 'prok_action',
 			whatever: 1234,
 			test: 1,
-			url: url,
+			id: id,
 			begin: getVal('#oneContent'),
 			end: getVal('#twoContent'),
 			title: getVal('#title'),

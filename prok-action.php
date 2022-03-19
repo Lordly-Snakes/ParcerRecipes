@@ -41,18 +41,21 @@ function getUrls(){
     for($i=0;$i<count($arr);$i++){
         $str.=$arr[$i].";";
     }
-    updateDataUrls($id,$str);
+    if(getDataUrls($id) != $str){
+        updateDataUrls($id,$str);
+    }
     standartResponse(100, 'URLS_OK', ($arr));
 }
-
-
 
 add_action( 'wp_ajax_prok_action', 'prok_action_callback' );
 function prok_action_callback(){
     global $Debug;
     $res_str = "";
     error_log("---------------------------------------------------------------START--simple");
-    $url = $_POST['url'];
+
+    $id = getPost("id");
+    $url_arr = explode(";",getDataUrls($id));
+    $url = $url_arr[getOffset($id)];
     $beginw = $_POST['begin'];
     $endw = $_POST['end'];
     $test = $_POST['test'];
@@ -66,6 +69,7 @@ function prok_action_callback(){
     if($test){
         $res_str =$res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr);
     }else{
+        incrementOffset($id);
         $res_str = $res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr);
     }
     $res_str = $res_str."</div>";
@@ -75,7 +79,6 @@ function prok_action_callback(){
 
 
 }
-
 
 function getPost($nameData){
     return $_POST[$nameData];

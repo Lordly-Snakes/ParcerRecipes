@@ -113,6 +113,7 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
 
 		// Вставляем запись в базу данных
 		if(!$bool){
+
             // Сохраняем и вставляем в бд запись
 			$post_id = savePost($title_preg[1],$str,[$cat]);
 

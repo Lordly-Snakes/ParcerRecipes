@@ -105,7 +105,17 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
                 </div>
                 <?php  wp_dropdown_categories("show_count=1&hierarchical=1&selected=$cat"); ?>
             </div>
-
+<!--            <div style="display: flex;align-items: baseline;">-->
+<!--                <div class="label-input">-->
+<!--                    <span  class="label-input">Включить ленту</span>-->
+<!--                </div>-->
+<!--                <label class="switch">-->
+<!--                    <input type="checkbox">-->
+<!--                    <div>-->
+<!--                        <span></span>-->
+<!--                    </div>-->
+<!--                </label>-->
+<!--            </div>-->
 
         </div>
         <br>
@@ -206,7 +216,7 @@ function createMainTable(){
         $count = $wpdb->get_var( "SELECT COUNT(*) FROM prok_table" );
         for($i=0;$i<$count;$i++){
             $obj = $wpdb->get_row( 'SELECT * FROM prok_table', OBJECT, $i );
-            createRow($obj->ID,$obj->name,$obj->index_url);
+            createRow($obj);
         }
 
         ?>
@@ -231,28 +241,35 @@ function createMainTable(){
     <?php
 }
 
-function createRow($ID,$name,$url){
+function createRow($row){
     ?>
     <tr>
         <th scope="row" class="check-column">
-            <input type="checkbox" name="row" value="<?php echo $ID; ?>">
+            <input type="checkbox" name="row" value="<?php echo $row->ID; ?>">
         </th>
-        <td class="name column-name has-row-actions column-primary" data-colname="Наименование ленты"><?php echo $name; ?>
-            <div class="row-actions"><span class="edit"><a href="?page=prok&prk-action=edit&prk-id=<?php echo $ID; ?>">Изменить</a></span>
-                <!--                 <div class="row-actions"><span class="edit"><a href="?page=prok&prk-action=edit&prk-id=<?php echo $ID; ?>">Изменить</a> | </span><span class="test"><a href="?page=prok&amp;prk-action=list&amp;id=<?php echo $ID; ?>" onclick="wpgrabberRun(<?php echo $ID; ?>, true); return false;">Тест&nbsp;импорта</a> | </span>
+        <td class="name column-name has-row-actions column-primary" data-colname="Наименование ленты"><?php echo $row->name; ?>
+            <div class="row-actions"><span class="edit"><a href="?page=prok&prk-action=edit&prk-id=<?php echo $row->ID; ?>">Изменить</a></span>
+                <!--                 <div class="row-actions"><span class="edit"><a href="?page=prok&prk-action=edit&prk-id=<?php echo $row->ID; ?>">Изменить</a> | </span><span class="test"><a href="?page=prok&amp;prk-action=list&amp;id=<?php echo $row->ID; ?>" onclick="wpgrabberRun(<?php echo $row->ID; ?>, true); return false;">Тест&nbsp;импорта</a> | </span>
                      <span
-                         class="import"><a href="?page=prok&amp;prk-action=list&amp;id=<?php echo $ID; ?>" onclick="wpgrabberRun(<?php echo $ID; ?>, false); return false;">Импорт</a></span>-->
+                         class="import"><a href="?page=prok&amp;prk-action=list&amp;id=<?php echo $row->ID; ?>" onclick="wpgrabberRun(<?php echo $row->ID; ?>, false); return false;">Импорт</a></span>-->
             </div><button type="button" class="toggle-row"></button><button type="button" class="toggle-row"></button></td>
         <td
                 class="type column-type" data-colname="Тип">html</td>
-        <td class="url column-url" data-colname="URL"><a target="_blank" href="<?php echo $url; ?>"><?php echo $url; ?></a></td>
-        <td class="published column-published" data-colname="Статус"><a href="?page=wpgrabber-index&amp;rows[]=42&amp;action=Off"><span style="color:blue;">Вкл.</span></a></td>
-        <td class="catid column-catid" data-colname="Рубрики">0</td>
-        <td class="id column-id" data-colname="ID"><?php echo $ID; ?></td>
+        <td class="url column-url" data-colname="URL"><a target="_blank" href="<?php echo $row->index_url; ?>"><?php echo $row->index_url; ?></a></td>
+        <td class="published column-published" data-colname="Статус"><a href="?page=wpgrabber-index&amp;rows[]=42&amp;action=Off"><span style="color:blue;"><?php echo echoBool($row->status); ?></span></a></td>
+        <td class="catid column-catid" data-colname="Рубрики"><?php echo get_the_category_by_ID($row->category);?></td>
+        <td class="id column-id" data-colname="ID"><?php echo $row->ID; ?></td>
         <td class="last_update column-last_update" data-colname="Обновление">0</td>
         <td class="count_posts column-count_posts" data-colname="Кол-во записей">0</td>
     </tr>
     <?php
+}
+
+function echoBool($bool){
+    if($bool){
+        return "Вкл. ";
+    }
+    return "Выкл. ";
 }
 
 function prok_process_display($id){

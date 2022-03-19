@@ -54,13 +54,11 @@ class Response{
     }
 }
 
-
 function standartResponse($code,$title_code,$data,$error_message = null){
     global $Debug;
     $res = new Response($code,$title_code,$data,$error_message,$Debug->getDebugData());
     echo  $res->toJSONconv($res);
     wp_die();
 }
-
 
 ?>

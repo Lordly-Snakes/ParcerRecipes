@@ -26,8 +26,7 @@ function getProcessData($id_lent,$num){
 function getData($id){
     global $wpdb;
     $query = $wpdb->prepare('SELECT * FROM prok_table where ID=%d',$id);
-    $obj = $wpdb->get_row( $query, OBJECT, 0 );
-    return $obj;
+    return $wpdb->get_row( $query, OBJECT, 0 );
 }
 
 function updateData($id,$index_url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$name,$title,$ingr_pr,$step_pr,$autoupdate,$count_add_post,$first_number,$cat){
@@ -43,6 +42,28 @@ function updateDataUrls($id,$urls){
     $query = $wpdb->prepare('UPDATE prok_table SET urls=%s where ID=%d',  [$urls,$id]);
     $wpdb->query( $query);
     //lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end);
+}
+
+function getDataUrls($id): ?string{
+    global $wpdb;
+    $query = $wpdb->prepare('SELECT urls FROM prok_table where ID=%d',  [$id]);
+    return $wpdb->get_var($query);
+}
+
+function getOffset($id){
+    global $wpdb;
+    $query = $wpdb->prepare('SELECT offset,first_number FROM prok_table where ID=%d',  [$id]);
+    $obj = $wpdb->get_row( $query,OBJECT);
+    return $obj->offset + $obj->first_number;
+}
+
+
+
+function incrementOffset($id){
+    global $wpdb;
+    $offset = getOffset($id) + 1;
+    $query = $wpdb->prepare('UPDATE prok_table SET offset=%d where ID=%d',  [$offset,$id]);
+    $wpdb->query( $query);
 }
 
 function deleteData($id){
