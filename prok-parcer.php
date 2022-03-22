@@ -170,12 +170,12 @@ function prok_menu_display(){
  		$obj = getData($lastid);
 		
 		
- 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->ingr_pr,$obj->step_pr,$obj->autoupdate,$obj->count_add_post,$obj->first_number,$obj->category);
+ 		prokDisplayLentForm($obj);
 		
  	}else if($actionState=='edit'){
  		$id = $_GET['prk-id'];
  		$obj = getData($id);
- 		lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end,$obj->ID,$obj->name,$obj->title_preg,$obj->ingr_pr,$obj->step_pr,$obj->autoupdate,$obj->count_add_post,$obj->first_number,$obj->category);
+ 		prokDisplayLentForm($obj);
  	}else{
  		createMainTable();
  	}

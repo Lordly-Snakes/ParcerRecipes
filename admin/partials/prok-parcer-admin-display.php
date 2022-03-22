@@ -11,8 +11,9 @@
  * @package    prok_parcer
  * @subpackage prok_parcer/admin/partials
  */
-
-function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$id,$name,$title,$ingr_pr,$step_pr,$autoupdate,$countAddPost,$firstNumber,$cat){
+//obj содержит поля `ID`,`status`,`name`,`title_preg`,`index_url`,`prok_begin_index`,`prok_end_index`,`prok_begin`,`prok_end`,`ingr_pr`,`step_pr`,`autoupdate`,`urls`,`count_add_post`,`first_number`,`category`,`offset`
+//function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,$id,$name,$title,$ingr_pr,$step_pr,$autoupdate,$countAddPost,$firstNumber,$cat){
+function prokDisplayLentForm($obj){
     ?>
     <style>
         .updated{
@@ -27,107 +28,91 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
                 <div class="label-input">
                     <span >Наименование ленты</span>
                 </div>
-                <input id="name" type="text" name="" value="<?php echo $name; ?>" size="100">
+                <input id="name" type="text" name="" value="<?php echo $obj->name; ?>" size="100">
             </div>
             <br>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span >URL индексной страницы</span>
                 </div>
-                <input id="url" type="text" name="" value="<?php echo $url; ?>" size="70">
+                <input id="url" type="text" name="" value="<?php echo $obj->index_url; ?>" size="70">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span >Начальная точка индексной страницы</span>
                 </div>
-                <input id="one" type="text" name="" value="<?php echo htmlentities( $prok_begin_index); ?>" size="120">
+                <input id="one" type="text" name="" value="<?php echo htmlentities( $obj->prok_begin_index); ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">Конечная точка индексной страницы</span>
                 </div>
-                <input id="two" type="text" name="" value="<?php echo htmlentities( $prok_end_index); ?>" size="120">
+                <input id="two" type="text" name="" value="<?php echo htmlentities( $obj->prok_end_index); ?>" size="120">
             </div>
             <br>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span >Заголовок</span>
                 </div>
-                <input id="title" type="text" name="" value="<?php echo htmlentities( $title); ?>" size="120">
+                <input id="title" type="text" name="" value="<?php echo htmlentities( $obj->title_preg); ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span >Начальная точка страницы</span>
                 </div>
-                <input id="oneContent" type="text" name="" value="<?php echo htmlentities( $prok_begin); ?>" size="120">
+                <input id="oneContent" type="text" name="" value="<?php echo htmlentities( $obj->prok_begin); ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">Конечная точка страницы</span>
                 </div>
-                <input id="twoContent" type="text" name="" value="<?php echo htmlentities( $prok_end); ?>" size="120">
+                <input id="twoContent" type="text" name="" value="<?php echo htmlentities( $obj->prok_end); ?>" size="120">
             </div>
             <br>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">шаблон для поиска ингридиентов</span>
                 </div>
-                <input id="prIng" type="text" name="" value="<?php echo htmlentities( $ingr_pr); ?>" size="120">
+                <input id="prIng" type="text" name="" value="<?php echo htmlentities( $obj->ingr_pr); ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">шаблон для поиска шагов</span>
                 </div>
-                <input id="prStep" type="text" name="" value="<?php echo htmlentities( $step_pr); ?>" size="120">
+                <input id="prStep" type="text" name="" value="<?php echo htmlentities( $obj->step_pr); ?>" size="120">
             </div>
             <br>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">Время автообновления</span>
                 </div>
-                <input id="timeAutoupdate" type="text" name="" value="<?php echo $autoupdate; ?>" size="120">
+                <input id="timeAutoupdate" type="text" name="" value="<?php echo $obj->autoupdate; ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">Кол-во записей за один прогон</span>
                 </div>
-                <input id="countAddPost" type="text" name="" value="<?php echo $countAddPost; ?>" size="120">
+                <input id="countAddPost" type="text" name="" value="<?php echo $obj->count_add_post; ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">Номер первой записей(0-с первой)</span>
                 </div>
-                <input id="firstNumber" type="text" name="" value="<?php echo $firstNumber; ?>" size="120">
+                <input id="firstNumber" type="text" name="" value="<?php echo $obj->first_number; ?>" size="120">
             </div>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
                     <span  class="label-input">Указать рубрику</span>
                 </div>
-                <?php  wp_dropdown_categories("show_count=1&hierarchical=1&selected=$cat"); ?>
+                <?php $cat = $obj->category;  wp_dropdown_categories("show_count=1&hierarchical=1&selected=$cat"); ?>
             </div>
-<!--            <div style="display: flex;align-items: baseline;">-->
-<!--                <div class="label-input">-->
-<!--                    <span  class="label-input">Включить ленту</span>-->
-<!--                </div>-->
-<!--                <label class="switch">-->
-<!--                    <input type="checkbox">-->
-<!--                    <div>-->
-<!--                        <span></span>-->
-<!--                    </div>-->
-<!--                </label>-->
-<!--            </div>-->
-
+            <?php                 prokDisplayStatus((bool)$obj->status);            ?>
         </div>
         <br>
-        <?php
-        prok_process_display($id);
-
-        ?>
-
-        <button id="dddd" class="button" onclick="getHr2(<?php echo $id; ?>,1)">OK</button>
-        <button id="dddd2" class="button" onclick="getHr2(<?php echo $id; ?>,0)">TEST</button>
-        <button id="save" class="button" onclick="saveOptions(<?php echo $id; ?>)">SAVE</button>
-        <!-- 		<button id="test" onclick="test()">TEST</button> -->
+        <?php    prokDisplayProcesses($obj->ID);  ?>
+        <button id="dddd" class="button" onclick="getHr2(<?php echo $obj->ID; ?>,1)">OK</button>
+        <button id="dddd2" class="button" onclick="getHr2(<?php echo $obj->ID; ?>,0)">TEST</button>
+        <button id="save" class="button" onclick="saveOptions(<?php echo $obj->ID; ?>)">SAVE</button>
     </div>
     <div id="responseHref"></div>
     <div id="response"></div>
@@ -135,14 +120,30 @@ function lent_from($url,$prok_begin_index,$prok_end_index,$prok_begin,$prok_end,
 
 }
 
-function prok_row_process_display($row,$i){
+function prokDisplayStatus($status){
+    ?>
+                <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">Включить ленту</span>
+                </div>
+                <label class="switch">
+                    <input id="st" type="checkbox" <?php if($status) { echo "checked"; } ?>>
+                    <div>
+                        <span></span>
+                    </div>
+                </label>
+            </div>
+    <?php
+}
+
+function prokDisplayRowProcess($row, $i){
     ?>
     <tr align="center">
         <td><?php echo $i; ?></td>
         <td>
             <select name="params[usrepl][<?php echo $i; ?>][type]" style="width:150px;">
                 <?php
-                prok_option_selector($row->status);
+                prokOptionSelector($row->status);
                 ?>
             </select>
         </td>
@@ -162,7 +163,7 @@ function prok_row_process_display($row,$i){
     <?php
 }
 
-function prok_option_selector($val){
+function prokOptionSelector($val){
     $def="";
     $index ="";
     $page="";
@@ -272,7 +273,7 @@ function echoBool($bool){
     return "Выкл. ";
 }
 
-function prok_process_display($id){
+function prokDisplayProcesses($id){
     ?>
     <td colspan="2">
     <fieldset style="width: 1000px;border: 1px solid;padding: 5px;">
@@ -307,9 +308,9 @@ function prok_process_display($id){
                 for($i=0;$i<50;$i++){
                     $row = getProcessData($id,$i);
                     if(!is_null($row)){
-                        prok_row_process_display($row,$i);
+                        prokDisplayRowProcess($row,$i);
                     }else{
-                        prok_row_process_display(new ProccesObj(),$i);
+                        prokDisplayRowProcess(new ProccesObj(),$i);
                         //prok_row_process_display(["","",""],$i);
                     }
 

@@ -86,6 +86,7 @@ function getPost($nameData){
 
 add_action( 'wp_ajax_prok_save', 'prok_save' );
 function prok_save(){
+    global $Debug;
     $id = getPost('id');
     $url = getPost('url');
     $begin = getPost('beginCon');
@@ -109,7 +110,11 @@ function prok_save(){
     $ingr_pr = stripslashes($ingr_pr);
     $step_pr = stripslashes($step_pr);
     $timeAuto = stripslashes($timeAuto);
-    updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title,$ingr_pr,$step_pr,$timeAuto,$count_add_post,$first_number,$cat);
+    $status = getPost("status");
+    $Debug->addDebugData(["status",$status]);
+    $status = $status == "true" ? 1 : 0;
+
+    updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title,$ingr_pr,$step_pr,$timeAuto,$count_add_post,$first_number,$cat,$status);
     for($i=0;$i<50;$i++){
         $obj = getProcessData($id,$i);
         /*

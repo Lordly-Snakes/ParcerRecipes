@@ -153,11 +153,12 @@
 			countAddPost: getVal('#countAddPost'),
 			firstNumber: getVal('#firstNumber'),
 			cat: getVal('#cat'),
+			status: jQuery("#st")[0].checked,
 			process: JSON.stringify(getProcessData())
 		};
 
 
-		console.log(datavar);
+		console.dir(datavar);
 		// с версии 2.8 'ajaxurl' всегда определен в админке
 
 
