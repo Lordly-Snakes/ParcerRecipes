@@ -22,6 +22,20 @@ function getImageFromContent($content){
 		return NULL;
 	}
 }
+/*
+ * TODO
+ *
+ * функция для определения лент необходимых к обновлению
+ * функция для получения основных данных
+ * функция для получения шаблонов обработки
+ * функция для выполнения парсинга
+ *
+ */
+
+
+function test(){
+    echo "test";
+}
 
 function getUrlsInDocument($url, $begin, $end, $arr): ?array
 {
