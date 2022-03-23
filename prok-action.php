@@ -80,10 +80,6 @@ function prok_action_callback(){
 
 }
 
-function getPost($nameData){
-    return $_POST[$nameData];
-}
-
 add_action( 'wp_ajax_prok_save', 'prok_save' );
 function prok_save(){
     global $Debug;

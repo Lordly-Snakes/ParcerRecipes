@@ -23,6 +23,20 @@ function getProcessData($id_lent,$num){
     return $obj;
 }
 
+function getProcessDataArr($id_lent,$num){
+    global $wpdb;
+    $query = $wpdb->prepare('SELECT * FROM prok_process_table where id_lent=%d and number_list=%d',[$id_lent,$num]);
+    $obj = $wpdb->get_row( $query, ARRAY_N, 0 );
+    return $obj;
+}
+
+function getTable($columnsName = null,$where = null){
+    global $wpdb;
+    $columnsName = is_null($columnsName) ? "*" : $columnsName;
+    $where = is_null($where) ? " " : $where;
+    return $wpdb->get_results( "SELECT $columnsName FROM prok_table $where", OBJECT );
+}
+
 function getData($id){
     global $wpdb;
     $query = $wpdb->prepare('SELECT * FROM prok_table where ID=%d',$id);

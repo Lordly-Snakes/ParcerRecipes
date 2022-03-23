@@ -37,8 +37,7 @@ function test(){
     echo "test";
 }
 
-function getUrlsInDocument($url, $begin, $end, $arr): ?array
-{
+function getUrlsInDocument($url, $begin, $end, $arr): ?array{
     global $Debug;
     $res_str = "";
     $buf=implode("",file($url));
@@ -85,7 +84,7 @@ function savePost($title,$content,$post_categories){
 		'post_author'   => 1,
 		'post_category' => $post_categories
 	);
-	$post_id = wp_insert_post( $post_data );	
+	$post_id = wp_insert_post( $post_data ,true);
 	return $post_id;
 }
 
@@ -93,7 +92,7 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
 {
     global $Debug;
     $buf=implode("",file($url));
-    $Debug->addDebugData($buf);
+    //$Debug->addDebugData($buf);
 	$begin = str_replace('\"','"',$begin);
 	$end = str_replace('\"','"',$end);
     $title = str_replace('\"','"',$title);
@@ -105,7 +104,7 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
     preg_match("/$title/is",$buf,$title_preg);
 
     if(preg_match_all("/$begin.*?$end/is",$buf,$matches) != NULL){
-        $Debug->addDebugData($matches);
+       // $Debug->addDebugData($matches);
         $res_str = "";
         // Получение текста
 		$str= $matches[0][0];
@@ -135,7 +134,7 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
             $ingridients_arr = prok_get_special_array_format_ingridients($ingridients_arr);
             $step_arr = getStepOrIngr($buf,$step);
             $step_arr = prok_get_special_array_format_step($step_arr);
-            $Debug->addDebugData($step_arr);
+            $Debug->addDebugData($post_id);
             addMetaArr($ingridients_arr,'recipe_ingredients',$post_id);
             addMetaArr($step_arr,"recipe_steps",$post_id);
 

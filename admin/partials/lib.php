@@ -337,4 +337,8 @@ function translate_yandex($text){
     return $res_text;
 
 }
+
+function getPost($nameData){
+    return $_POST[$nameData];
+}
 ?>
