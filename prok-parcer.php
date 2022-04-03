@@ -55,7 +55,6 @@ function getUrlsInDocument($url, $begin, $end, $arr): ?array{
         $Debug->addDebugData("NOT_FOUND_SEARCH_ZONE");
         standartResponse(200,"NOT_FOUND_SEARCH_ZONE",null,"Зона поиска задана неверно, попробуйте сменить зону поиска");
 	}
-	error_log("---------------------------------------------------------------END--simple");
 }
 
 function useOptionalProcess($str){
@@ -144,7 +143,6 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
     }else{
 		return null;
 	}
-	error_log("---------------------------------------------------------------END--simple");
 }
 
 function useProccess($arr,$text,$place){
@@ -152,7 +150,6 @@ function useProccess($arr,$text,$place){
 		if($arr[$i][0] != ""){
 			if($arr[$i][1] == $place){
 				$search = ($arr[$i][0]);
-				error_log("---------------------------------------------------------------$search");
 				$replacement = $arr[$i][3] != "" ? $arr[$i][3] : ' ';
 				$text = preg_replace("/$search/is", $replacement, $text);
 			}
