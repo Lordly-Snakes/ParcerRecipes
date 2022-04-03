@@ -59,7 +59,7 @@ function prok_action_callback(){
     $beginw = $_POST['begin'];
     $endw = $_POST['end'];
     $test = $_POST['test'];
-    $title = $_POST['title'];
+    $title = stripslashes($_POST['title']);
     $Debug->addDebugData($url);
     $ingr_pr = stripslashes(getPost('ingr_pr'));
     $step_pr = stripslashes(getPost('step_pr'));

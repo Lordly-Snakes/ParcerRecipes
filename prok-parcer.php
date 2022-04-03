@@ -22,15 +22,6 @@ function getImageFromContent($content){
 		return NULL;
 	}
 }
-/*
- * TODO
- *
- * функция для определения лент необходимых к обновлению
- * функция для получения основных данных
- * функция для получения шаблонов обработки
- * функция для выполнения парсинга
- *
- */
 
 
 function test(){
@@ -92,11 +83,11 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
 {
     global $Debug;
     $buf=implode("",file($url));
-    //$Debug->addDebugData($buf);
+    $Debug->addDebugData($title);
 	$begin = str_replace('\"','"',$begin);
 	$end = str_replace('\"','"',$end);
     $title = str_replace('\"','"',$title);
-	$title = stripslashes($title);
+	//$title = stripslashes($title);
     $begin = preg_quote($begin,"/");
     $end = preg_quote($end,"/");
     $cat = getPost('cat');

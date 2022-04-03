@@ -25,7 +25,7 @@ function getProcessData($id_lent,$num){
 
 function getProcessDataArr($id_lent,$num){
     global $wpdb;
-    $query = $wpdb->prepare('SELECT * FROM prok_process_table where id_lent=%d and number_list=%d',[$id_lent,$num]);
+    $query = $wpdb->prepare('SELECT value,status,number_list,replacement,id_lent FROM prok_process_table where id_lent=%d and number_list=%d',[$id_lent,$num]);
     $obj = $wpdb->get_row( $query, ARRAY_N, 0 );
     return $obj;
 }
