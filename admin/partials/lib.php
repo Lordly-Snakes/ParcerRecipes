@@ -4,6 +4,7 @@ function prok_get_special_array_format_ingridients($arr){
     //$arr = explode("\n", $text);
     $arr3 = [];
     for($i=0;$i<count($arr);$i++){
+        $arr[$i] = cleanStepOrIngr($arr[$i]);
         // teaspoon ounce pounds kg mg ml cup cups tablespoon
         preg_match('/([0-9\/to\-]{1,})/is',$arr[$i],$mmm);
         $c = preg_quote($mmm[1],"/");
@@ -26,6 +27,7 @@ function prok_get_special_array_format_step($arr){
     $Debug->addDebugData($arr);
     $arr3= [];
     for($i=0;$i<count($arr);$i++){
+        $arr[$i] = cleanStepOrIngr($arr[$i]);
         $arr[$i] = preg_replace("/<.*?>/is","",$arr[$i]);
         $arr3[] = array(
             "text"=>$arr[$i],
@@ -49,6 +51,11 @@ function getStepOrIngr($str,$pattern){
     preg_match_all("/<li.*?>(.*?)<\/li>/is",$match[0],$match2);
     //var_dump($match2[1]);
     return $match2[1];
+}
+
+function cleanStepOrIngr($val) :string {
+    $val = preg_replace("/<.*?>/is","",$val);
+    return preg_replace("/<\/.*?>/is","",$val);
 }
 
 function removeStepOrIngr($str,$pattern): string

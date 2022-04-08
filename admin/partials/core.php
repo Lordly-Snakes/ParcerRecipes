@@ -48,7 +48,7 @@ class Response{
         $this->debug_data = $debug_data;
     }
 
-    public function toJSONconv($obj){
+    public function toJSONConvector($obj){
         //var_dump($this);
         return json_encode($obj);
     }
@@ -57,7 +57,7 @@ class Response{
 function standartResponse($code,$title_code,$data,$error_message = null){
     global $Debug;
     $res = new Response($code,$title_code,$data,$error_message,$Debug->getDebugData());
-    echo  $res->toJSONconv($res);
+    echo  $res->toJSONConvector($res);
     wp_die();
 }
 

@@ -112,6 +112,9 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat): 
 		$ingridients_arr = getStepOrIngr(useProccess($arr,$str,'page'),$ingr);
 
 		$step_arr = getStepOrIngr($str,$step);
+
+
+
 		$str = removeStepOrIngr($str,$ingr);
 		$str = removeStepOrIngr($str,$step);
 		$str = useOptionalProcess($str);
