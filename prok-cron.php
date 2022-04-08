@@ -20,10 +20,9 @@ for($i=0;$i<count($tbData);$i++){
         $url = $url_arr[getOffset($row->ID)];
         echo "<br>".$url."<br>";
         incrementOffset($row->ID);
-       // var_dump(($arr_proc));
-       echo(htmlentities( $row->title_preg));
-        echo getContentToSave($url, $row->prok_begin,$row->prok_end,$row->title_preg,$arr_proc,false,$row->ingr_pr,$row->step_pr);
-       // var_dump( $Debug->getDebugData());
+        echo(htmlentities( $row->title_preg));
+        echo getContentToSave($url, $row->prok_begin,$row->prok_end,$row->title_preg,$arr_proc,false,$row->ingr_pr,$row->step_pr,$row->category);
+
     }
 }
 

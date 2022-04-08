@@ -78,7 +78,7 @@ function savePost($title,$content,$post_categories){
 	return $post_id;
 }
 
-function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?string
+function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat): ?string
 {
     global $Debug;
     $buf=implode("",file($url));
@@ -89,7 +89,7 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
 	//$title = stripslashes($title);
     $begin = preg_quote($begin,"/");
     $end = preg_quote($end,"/");
-    $cat = getPost('cat');
+
 
     preg_match("/$title/is",$buf,$title_preg);
 
@@ -99,32 +99,56 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step): ?stri
         // Получение текста
 		$str= $matches[0][0];
         // Обработка шаблонами обработки
+
 		$str = useProccess($arr,$str,'page');
-		$str = useOptionalProcess($str);
-        // Работа с изображениями
+
+		// Работа с изображениями
 		$image_arr = getImageFromContent($str);
-        $path =  $bool ? "prok-test-uploads" : "prok-uploads";
-        $res = saveImages($image_arr, $path,$title_preg[1]);
+		$path =  $bool ? "prok-test-uploads" : "prok-uploads";
+		$res = saveImages($image_arr, $path,$title_preg[1]);
+		$Debug->addDebugData(["1",$res]);
 		$str = replaceImages($image_arr,$res[1],$str);
+
+		$ingridients_arr = getStepOrIngr(useProccess($arr,$str,'page'),$ingr);
+
+		$step_arr = getStepOrIngr($str,$step);
+		$str = removeStepOrIngr($str,$ingr);
+		$str = removeStepOrIngr($str,$step);
+		$str = useOptionalProcess($str);
+
+
+
 
 
         // Формируем вывод
         $res_str =$res_str."<br><b>Заголовок: </b>";
         $res_str =$res_str.$title_preg[1];
         $res_str =$res_str."<br><b>Текст:</b><br>";
-        $res_str =$res_str."$str";
 
+
+
+
+		$Debug->addDebugData(["INGR",$ingr]);
+		$Debug->addDebugData(["STEP",$step]);
+		$res_str =$res_str."$str";
+		$res_str =$res_str."<br><b>Ингредиенты:</b><br>";
+		for($i=0;$i<count($ingridients_arr);$i++){
+			$res_str =$res_str.$ingridients_arr[$i]."<br>";
+		}
+		$res_str =$res_str."<br><b>Шаги:</b><br>";
+		for($i=0;$i<count($step_arr);$i++){
+			$res_str =$res_str.$step_arr[$i]."<br>";
+		}
 		// Вставляем запись в базу данных
 		if(!$bool){
-
+			$ingridients_arr = prok_get_special_array_format_ingridients($ingridients_arr);
+			$step_arr = prok_get_special_array_format_step($step_arr);
             // Сохраняем и вставляем в бд запись
 			$post_id = savePost($title_preg[1],$str,[$cat]);
 
-            $ingridients_arr = getStepOrIngr(useProccess($arr,$buf,'page'),$ingr);
-            $ingridients_arr = prok_get_special_array_format_ingridients($ingridients_arr);
-            $step_arr = getStepOrIngr($buf,$step);
-            $step_arr = prok_get_special_array_format_step($step_arr);
+
             $Debug->addDebugData($post_id);
+			//$removeStepOrIngr();
             addMetaArr($ingridients_arr,'recipe_ingredients',$post_id);
             addMetaArr($step_arr,"recipe_steps",$post_id);
 

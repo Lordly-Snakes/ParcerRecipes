@@ -60,6 +60,7 @@ function prok_action_callback(){
     $endw = $_POST['end'];
     $test = $_POST['test'];
     $title = stripslashes($_POST['title']);
+    $cat = getPost('cat');
     $Debug->addDebugData($url);
     $ingr_pr = stripslashes(getPost('ingr_pr'));
     $step_pr = stripslashes(getPost('step_pr'));
@@ -67,10 +68,10 @@ function prok_action_callback(){
     $process_arr = json_decode(stripslashes($_POST["process"]));
     $res_str = $res_str."<div class=\"res-content\">";
     if($test){
-        $res_str =$res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr);
+        $res_str =$res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr,$cat);
     }else{
         incrementOffset($id);
-        $res_str = $res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr);
+        $res_str = $res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr,$cat);
     }
     $res_str = $res_str."</div>";
     // выход нужен для того, чтобы в ответе не было ничего лишнего,

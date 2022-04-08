@@ -51,6 +51,11 @@ function getStepOrIngr($str,$pattern){
     return $match2[1];
 }
 
+function removeStepOrIngr($str,$pattern): string
+{
+    return preg_replace("/$pattern/is","",$str);
+}
+
 function deleteAllTestImage($path){
     if (file_exists(wp_upload_dir()['basedir']."/$path/")) {
         foreach (glob(wp_upload_dir()['basedir']."/$path/*") as $file) {
@@ -60,14 +65,13 @@ function deleteAllTestImage($path){
 }
 
 function replaceImages($img_search_arr,$img_res_arr,$content){
-    if(count($img_search_arr) == count($img_res_arr)){
-        for($i=0;$i<count($img_search_arr);$i++){
-            $content = str_replace($img_search_arr[$i],$img_res_arr[$img_search_arr[$i]],$content);
-        }
-        return $content;
-    }else{
-        return $content;
+    global $Debug;
+    $Debug->addDebugData(["2",$img_search_arr]);
+    $Debug->addDebugData(["3",$img_res_arr]);
+    for($i=0;$i<count($img_search_arr);$i++){
+        $content = str_replace($img_search_arr[$i],$img_res_arr[$img_search_arr[$i]],$content);
     }
+    return $content;
 }
 
 function saveImages($arr_images_urls, $path, $prefix_name){
