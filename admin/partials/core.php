@@ -39,7 +39,7 @@ class Response{
     public $error_message;
     public $debug_data;
 
-    public function __construct($code,$title_code,$data,$error_message = null,$debug_data = null)
+    public function __construct($code,$title_code,$data=null,$error_message = null,$debug_data = null)
     {
         $this->code = $code;
         $this->title_code = $title_code;

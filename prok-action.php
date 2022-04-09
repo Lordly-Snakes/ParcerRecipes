@@ -52,7 +52,8 @@ function prok_action_callback(){
     global $Debug;
     $res_str = "";
     error_log("---------------------------------------------------------------START--simple");
-
+    $statust = getPost("statust");
+    $statust = $statust == "true" ? 1 : 0;
     $id = getPost("id");
     $url_arr = explode(";",getDataUrls($id));
     $url = $url_arr[getOffset($id)];
@@ -64,14 +65,17 @@ function prok_action_callback(){
     $Debug->addDebugData($url);
     $ingr_pr = stripslashes(getPost('ingr_pr'));
     $step_pr = stripslashes(getPost('step_pr'));
+    $cal = stripslashes(getPost('cal'));
+    $serves =  stripslashes(getPost('serves'));
+    $time_cook =  stripslashes(getPost('time_cook'));
     $timeAuto = getPost('autopost');
     $process_arr = json_decode(stripslashes($_POST["process"]));
     $res_str = $res_str."<div class=\"res-content\">";
     if($test){
-        $res_str =$res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr,$cat);
+        $res_str =$res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr,$cat,$cal,$time_cook,$serves,$statust);
     }else{
         incrementOffset($id);
-        $res_str = $res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr,$cat);
+        $res_str = $res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr,$cat,$cal,$time_cook,$serves,$statust);
     }
     $res_str = $res_str."</div>";
     // выход нужен для того, чтобы в ответе не было ничего лишнего,
@@ -95,6 +99,9 @@ function prok_save(){
     $ingr_pr = getPost('ingr_pr');
     $step_pr = getPost('step_pr');
     $timeAuto = getPost('autopost');
+    $cal = stripslashes(getPost('cal'));
+    $serves =  stripslashes(getPost('serves'));
+    $time_cook =  stripslashes(getPost('time_cook'));
     $cat = getPost("cat");
     $count_add_post=getPost('countAddPost');
     $first_number =getPost('firstNumber');
@@ -108,10 +115,11 @@ function prok_save(){
     $step_pr = stripslashes($step_pr);
     $timeAuto = stripslashes($timeAuto);
     $status = getPost("status");
+    $statust = getPost("statust");
     $Debug->addDebugData(["status",$status]);
     $status = $status == "true" ? 1 : 0;
-
-    updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title,$ingr_pr,$step_pr,$timeAuto,$count_add_post,$first_number,$cat,$status);
+    $statust = $statust == "true" ? 1 : 0;
+    updateData($id,$url,$begin,$end,$beginC,$endC,$name,$title,$ingr_pr,$step_pr,$timeAuto,$count_add_post,$first_number,$cat,$status,$cal,$time_cook,$serves,$statust);
     for($i=0;$i<50;$i++){
         $obj = getProcessData($id,$i);
         /*

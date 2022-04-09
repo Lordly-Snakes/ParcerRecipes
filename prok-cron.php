@@ -22,6 +22,7 @@ for($i=0;$i<count($tbData);$i++){
         incrementOffset($row->ID);
         echo(htmlentities( $row->title_preg));
         echo getContentToSave($url, $row->prok_begin,$row->prok_end,$row->title_preg,$arr_proc,false,$row->ingr_pr,$row->step_pr,$row->category);
+        setData("lastupdate",$row->ID,time());
 
     }
 }

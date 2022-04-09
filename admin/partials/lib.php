@@ -22,16 +22,20 @@ function prok_get_special_array_format_ingridients($arr){
     return $arr3;
 }
 
-function prok_get_special_array_format_step($arr){
+function prok_get_special_array_format_step($arr,$imgs_ids){
     global $Debug;
     $Debug->addDebugData($arr);
     $arr3= [];
+
     for($i=0;$i<count($arr);$i++){
+        preg_match("/src=\"(.*?)\"/is",$arr[$i],$match);
+        $Debug->addDebugData( $arr[$i]);
+        $Debug->addDebugData( $imgs_ids[$match[1]]);
         $arr[$i] = cleanStepOrIngr($arr[$i]);
         $arr[$i] = preg_replace("/<.*?>/is","",$arr[$i]);
         $arr3[] = array(
             "text"=>$arr[$i],
-            "photo"=>0,
+            "photo"=>$imgs_ids[$match[1]],
 
         );
     }
@@ -51,6 +55,15 @@ function getStepOrIngr($str,$pattern){
     preg_match_all("/<li.*?>(.*?)<\/li>/is",$match[0],$match2);
     //var_dump($match2[1]);
     return $match2[1];
+}
+
+function getDataHtml($str,$pattern){
+    global $Debug;
+    $Debug->addDebugData($pattern);
+    preg_match("/$pattern/is",$str,$match);
+    $Debug->addDebugData($match);
+
+    return cleanStepOrIngr($match[1]);
 }
 
 function cleanStepOrIngr($val) :string {
@@ -94,8 +107,6 @@ function saveImages($arr_images_urls, $path, $prefix_name){
         $name_tmp = $prefix_name."-".time()."-".$i.".png";
         saveImgCurl($img_url,wp_upload_dir()['basedir']."/$path",$name_tmp);
         error_log($name_tmp);
-        //echo "$img_url";
-        //         /prok-$test-uploads/
         $images_urls[] = wp_upload_dir()['baseurl']."/$path/$name_tmp";
         $images_urls_assoc[$img_url] = wp_upload_dir()['baseurl']."/$path/$name_tmp";
     }
@@ -148,6 +159,7 @@ function saveImagesAndAddToPost($post_id, $file, $desc = null , $thumb = false){
 
     // удалим временный файл
     @unlink( $tmp );
+    return $id;
 }
 
 function save_img_stn($url_image,$path_to_save,$name){
@@ -311,7 +323,8 @@ function addAbz($str){
     return implode(" ",$pred);
 }
 
-function translate_yandex($text){
+function translate_yandex($text) {
+    global $Debug;
 	$API_KEY = 'AQVN1rvXcknkrNZSONqMOv-BUNxC1c31r2ihdSJ8';
 	$folder_id = 'b1gmftogfp2uck1rvei0';
 	$target_language = 'ru';
@@ -345,6 +358,7 @@ function translate_yandex($text){
 	}
 
 	$res_text = json_decode($result)->translations[0]->text;
+    $Debug->addDebugData(json_decode($result));
     return $res_text;
 
 }

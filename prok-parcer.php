@@ -19,7 +19,7 @@ function getImageFromContent($content){
 	if(preg_match_all("/src=\"(.*?)\"/is",$content,$matches) != NULL){
 		return $matches[1];
 	}else{
-		return NULL;
+		return 0;
 	}
 }
 
@@ -78,7 +78,7 @@ function savePost($title,$content,$post_categories){
 	return $post_id;
 }
 
-function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat): ?string
+function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat,$cal,$time_cook,$serves,$stt): ?string
 {
     global $Debug;
     $buf=implode("",file($url));
@@ -99,11 +99,16 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat): 
         // Получение текста
 		$str= $matches[0][0];
         // Обработка шаблонами обработки
-
+		$cook_time = getDataHtml($str,$time_cook);
+		$cal = getDataHtml($str,$cal);
+		$serves = getDataHtml($str,$serves);
 		$str = useProccess($arr,$str,'page');
 
 		// Работа с изображениями
 		$image_arr = getImageFromContent($str);
+		if(count($image_arr)===0){
+			standartResponse(500,"ERROR_NOT_FOUND_IMAGE");
+		}
 		$path =  $bool ? "prok-test-uploads" : "prok-uploads";
 		$res = saveImages($image_arr, $path,$title_preg[1]);
 		$Debug->addDebugData(["1",$res]);
@@ -113,22 +118,52 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat): 
 
 		$step_arr = getStepOrIngr($str,$step);
 
-
-
 		$str = removeStepOrIngr($str,$ingr);
 		$str = removeStepOrIngr($str,$step);
 		$str = useOptionalProcess($str);
-
-
-
-
-
+		if($stt>0){
+			$title_preg[1] = translate_yandex($title_preg[1]);
+			if($title_preg[1] === false){
+				standartResponse(500,"ERROR_TRANSLATE_TITLE","Перевод не выполнился","Перевод не выполнился");
+			}
+		}
         // Формируем вывод
+		$res_str =$res_str."<br><b>Ссылка: </b>";
+		$res_str =$res_str.$url;
         $res_str =$res_str."<br><b>Заголовок: </b>";
         $res_str =$res_str.$title_preg[1];
         $res_str =$res_str."<br><b>Текст:</b><br>";
+		if($stt>0){
 
+			$str = translate_yandex($str);
+			if($str === false){
+				standartResponse(500,"ERROR_TRANSLATE_TEXT","Перевод не выполнился","Перевод не выполнился");
+			}
+		}
+		if($stt>0){
+			$tr_ingr = $ingridients_arr[0];
+			for($i=1;$i<count($ingridients_arr);$i++){
+				$tr_ingr =$tr_ingr.";".$ingridients_arr[$i];
+			}
+			$tr_ingr = translate_yandex($tr_ingr);
+			if($tr_ingr === false){
+				standartResponse(500,"ERROR_TRANSLATE_INGR","Перевод не выполнился","Перевод не выполнился");
+			}
+			$ingridients_arr = explode(";",$tr_ingr);
 
+		}
+		if($stt>0){
+			$tr_step = $step_arr[0];
+			for($i=1;$i<count($step_arr);$i++){
+				$tr_step =$tr_step.";".$step_arr[$i];
+			}
+			$tr_step = translate_yandex($tr_step);
+			if($tr_step === false){
+				standartResponse(500,"ERROR_TRANSLATE_STEP","Перевод не выполнился","Перевод не выполнился");
+			}
+			$step_arr = explode(";",$tr_step);
+
+		}
 
 
 		$Debug->addDebugData(["INGR",$ingr]);
@@ -141,30 +176,50 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat): 
 		$res_str =$res_str."<br><b>Шаги:</b><br>";
 		for($i=0;$i<count($step_arr);$i++){
 			$res_str =$res_str.$step_arr[$i]."<br>";
+			preg_match("/src=\"(.*?)\"/is",$step_arr[$i],$match);
+			$Debug->addDebugData($step_arr[$i]);
+			$Debug->addDebugData($match[1]);
 		}
+
+		$res_str =$res_str."<br><b>Калории:</b><br>";
+		$res_str =$res_str.$cal;
+		$res_str =$res_str."<br><b>Время приготовления:</b><br>";
+		$res_str =$res_str.$cook_time;
+		$res_str =$res_str."<br><b>Порции:</b><br>";
+		$res_str =$res_str.$serves;
+
 		// Вставляем запись в базу данных
 		if(!$bool){
-			$ingridients_arr = prok_get_special_array_format_ingridients($ingridients_arr);
-			$step_arr = prok_get_special_array_format_step($step_arr);
+
             // Сохраняем и вставляем в бд запись
+
+
+
 			$post_id = savePost($title_preg[1],$str,[$cat]);
 
-
-            $Debug->addDebugData($post_id);
-			//$removeStepOrIngr();
-            addMetaArr($ingridients_arr,'recipe_ingredients',$post_id);
-            addMetaArr($step_arr,"recipe_steps",$post_id);
-
 			$images_urls = $res[0];
-            // Сохраняем изображения в бд и медиатеке
+			$imgs_ids = [];
+			// Сохраняем изображения в бд и медиатеке
 			for($i = 0;$i < count($images_urls);$i++){
 				if($i == 0){
-                    // Первое изображение пойдет на изоюражение-миниатюру
-					saveImagesAndAddToPost( $post_id, $images_urls[$i],null,true);
+					// Первое изображение пойдет на изоюражение-миниатюру
+					$imgs_ids[$images_urls[$i]] = saveImagesAndAddToPost( $post_id, $images_urls[$i],null,true);
 				}else{
-					saveImagesAndAddToPost( $post_id, $images_urls[$i]);
+					$imgs_ids[$images_urls[$i]] = saveImagesAndAddToPost( $post_id, $images_urls[$i]);
 				}
 			}
+            $Debug->addDebugData($post_id);
+			//$removeStepOrIngr();
+			$ingridients_arr = prok_get_special_array_format_ingridients($ingridients_arr);
+			$step_arr = prok_get_special_array_format_step($step_arr,$imgs_ids);
+            addMetaArr($ingridients_arr,'recipe_ingredients',$post_id);
+
+            addMetaArr($step_arr,"recipe_steps",$post_id);
+
+			addMetaArr(trim($serves),"recipe_serves",$post_id);
+			addMetaArr(trim($cal),"recipe_calories",$post_id);
+			addMetaArr(trim($cook_time),"recipe_cook_time",$post_id);
+
 		}
         return $res_str;
     }else{

@@ -81,7 +81,11 @@
 			title: getVal('#title'),
 			ingr_pr: getVal('#prIng'),
 			step_pr: getVal('#prStep'),
+			cal: getVal('#prCal'),
+			serves: getVal('#prServes'),
+			time_cook: getVal('#prTimeCook'),
 			autopost: getVal('#timeAutoupdate'),
+			statust: jQuery("#stt")[0].checked,
 			cat: getVal('#cat'),
 			process: JSON.stringify(getProcessData())
 		};
@@ -110,8 +114,12 @@
 			title: getVal('#title'),
 			ingr_pr: getVal('#prIng'),
 			step_pr: getVal('#prStep'),
+			cal: getVal('#prCal'),
+			serves: getVal('#prServes'),
+			time_cook: getVal('#prTimeCook'),
 			autopost: getVal('#timeAutoupdate'),
 			cat: getVal('#cat'),
+			statust: jQuery("#stt")[0].checked,
 			process: JSON.stringify(getProcessData())
 		};
 		console.log(getVal('#cat'));
@@ -149,11 +157,15 @@
 			title: getVal('#title'),
 			ingr_pr: getVal('#prIng'),
 			step_pr: getVal('#prStep'),
+			cal: getVal('#prCal'),
+			serves: getVal('#prServes'),
+			time_cook: getVal('#prTimeCook'),
 			autopost: getVal('#timeAutoupdate'),
 			countAddPost: getVal('#countAddPost'),
 			firstNumber: getVal('#firstNumber'),
 			cat: getVal('#cat'),
 			status: jQuery("#st")[0].checked,
+			statust: jQuery("#stt")[0].checked,
 			process: JSON.stringify(getProcessData())
 		};
 

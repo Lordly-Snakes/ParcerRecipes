@@ -81,6 +81,24 @@ function prokDisplayLentForm($obj){
                 </div>
                 <input id="prStep" type="text" name="" value="<?php echo htmlentities( $obj->step_pr); ?>" size="120">
             </div>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">шаблон для поиска калорий</span>
+                </div>
+                <input id="prCal" type="text" name="" value="<?php echo htmlentities( $obj->cal); ?>" size="120">
+            </div>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">шаблон для поиска времени приготовления</span>
+                </div>
+                <input id="prTimeCook" type="text" name="" value="<?php echo htmlentities( $obj->time_cook); ?>" size="120">
+            </div>
+            <div style="display: flex;align-items: baseline;">
+                <div class="label-input">
+                    <span  class="label-input">шаблон для поиска кол-ва порций</span>
+                </div>
+                <input id="prServes" type="text" name="" value="<?php echo htmlentities( $obj->serves); ?>" size="120">
+            </div>
             <br>
             <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
@@ -106,7 +124,8 @@ function prokDisplayLentForm($obj){
                 </div>
                 <?php $cat = $obj->category;  wp_dropdown_categories("show_count=1&hierarchical=1&selected=$cat"); ?>
             </div>
-            <?php                 prokDisplayStatus((bool)$obj->status);            ?>
+            <?php                 prokDisplayStatus((bool)$obj->status,"st","Включить ленту");            ?>
+            <?php                 prokDisplayStatus((bool)$obj->status_translate,"stt","Включить перевод");            ?>
         </div>
         <br>
         <?php    prokDisplayProcesses($obj->ID);  ?>
@@ -120,14 +139,14 @@ function prokDisplayLentForm($obj){
 
 }
 
-function prokDisplayStatus($status){
+function prokDisplayStatus($status,$nameSt,$name){
     ?>
                 <div style="display: flex;align-items: baseline;">
                 <div class="label-input">
-                    <span  class="label-input">Включить ленту</span>
+                    <span  class="label-input"><?php echo $name ?></span>
                 </div>
                 <label class="switch">
-                    <input id="st" type="checkbox" <?php if($status) { echo "checked"; } ?>>
+                    <input id="<?php echo $nameSt ?>" type="checkbox" <?php if($status) { echo "checked"; } ?>>
                     <div>
                         <span></span>
                     </div>
