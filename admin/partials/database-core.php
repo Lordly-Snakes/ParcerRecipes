@@ -70,6 +70,19 @@ function getDataUrls($id): ?string{
     return $wpdb->get_var($query);
 }
 
+function getDataUrlsSuc($id): ?string{
+    global $wpdb;
+    $query = $wpdb->prepare('SELECT url_success FROM prok_table where ID=%d',  [$id]);
+    return $wpdb->get_var($query);
+}
+
+function updateDataUrlsSuc($id,$urls){
+    global $wpdb;
+    $query = $wpdb->prepare('UPDATE prok_table SET url_success=%s where ID=%d',  [$urls,$id]);
+    $wpdb->query( $query);
+    //lent_from($obj->index_url,$obj->prok_begin_index,$obj->prok_end_index,$obj->prok_begin,$obj->prok_end);
+}
+
 function getOffset($id){
     global $wpdb;
     $query = $wpdb->prepare('SELECT offset,first_number FROM prok_table where ID=%d',  [$id]);

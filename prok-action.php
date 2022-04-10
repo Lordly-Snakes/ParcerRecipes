@@ -47,6 +47,7 @@ function getUrls(){
     standartResponse(100, 'URLS_OK', ($arr));
 }
 
+
 add_action( 'wp_ajax_prok_action', 'prok_action_callback' );
 function prok_action_callback(){
     global $Debug;
@@ -55,8 +56,44 @@ function prok_action_callback(){
     $statust = getPost("statust");
     $statust = $statust == "true" ? 1 : 0;
     $id = getPost("id");
+
+    deleteAllTestImage( "prok-test-uploads");
+    $urlOne = $_POST['url'];
+    $begin = $_POST['beginCon'];
+    $end = $_POST['endCon'];
+    $process_arr = json_decode(stripslashes($_POST["process"]));
+    $arr = getUrlsInDocument($urlOne,$begin,$end,$process_arr);
+    if(count($arr)==0){
+        standartResponse(404,"NOT_POSTS_FOUND","Ссылки не найдены");
+    }
+    $Debug->addDebugData($id);
+    $str ="";
+    for($i=0;$i<count($arr);$i++){
+        $str.=$arr[$i].";";
+    }
+    if(getDataUrls($id) != $str){
+        updateDataUrls($id,$str);
+    }
+
+
     $url_arr = explode(";",getDataUrls($id));
-    $url = $url_arr[getOffset($id)];
+    $Debug->addDebugData($url_arr);
+    $offset = getOffset($id);
+    $Debug->addDebugData($offset);
+    $url = $url_arr[$offset];
+    $Debug->addDebugData($url);
+    while(!validUrl($url,$id)){
+        $url = $url_arr[++$offset];
+        if(is_null($url)){
+            standartResponse(404,"NOT_POSTS_FOUND",null);
+        }
+    }
+
+    $arrURL =explode(";",getDataUrlsSuc($id));
+    $arrURL[] = $url;
+
+
+
     $beginw = $_POST['begin'];
     $endw = $_POST['end'];
     $test = $_POST['test'];
@@ -69,12 +106,13 @@ function prok_action_callback(){
     $serves =  stripslashes(getPost('serves'));
     $time_cook =  stripslashes(getPost('time_cook'));
     $timeAuto = getPost('autopost');
-    $process_arr = json_decode(stripslashes($_POST["process"]));
+   // $process_arr = json_decode(stripslashes($_POST["process"]));
     $res_str = $res_str."<div class=\"res-content\">";
     if($test){
         $res_str =$res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,true,$ingr_pr,$step_pr,$cat,$cal,$time_cook,$serves,$statust);
     }else{
         incrementOffset($id);
+        updateDataUrlsSuc($id,createUrlForBD($arrURL));
         $res_str = $res_str.getContentToSave($url,$beginw,$endw,$title,$process_arr,false,$ingr_pr,$step_pr,$cat,$cal,$time_cook,$serves,$statust);
     }
     $res_str = $res_str."</div>";

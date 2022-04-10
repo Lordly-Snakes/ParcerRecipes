@@ -366,4 +366,27 @@ function translate_yandex($text) {
 function getPost($nameData){
     return $_POST[$nameData];
 }
+
+
+function validUrl($url,$id) : bool{
+    $obj = getData($id);
+    if(!is_null($obj->url_success)){
+        $arrSuccess = explode(";",$obj->url_success);
+        for($i = 1; $i < count($arrSuccess); $i++){
+            if(in_array($url,$arrSuccess)){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function createUrlForBD($arr) : string{
+    $str = "";
+    $str .= $arr[0];
+    for($i = 1; $i < count($arr); $i++){
+        $str .= ";".$arr[$i];
+    }
+    return $str;
+}
 ?>

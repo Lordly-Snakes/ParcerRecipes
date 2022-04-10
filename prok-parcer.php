@@ -192,9 +192,6 @@ function getContentToSave($url,$begin,$end,$title,$arr,$bool,$ingr,$step,$cat,$c
 		if(!$bool){
 
             // Сохраняем и вставляем в бд запись
-
-
-
 			$post_id = savePost($title_preg[1],$str,[$cat]);
 
 			$images_urls = $res[0];
